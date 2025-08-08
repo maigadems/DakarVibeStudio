@@ -1,123 +1,108 @@
 import React from 'react';
-import { Award, Music2, Users, Zap } from 'lucide-react';
+import { Music, Award, Users, Zap } from 'lucide-react';
 
-const About: React.FC = () => {
-  const features = [
-    {
-      icon: Music2,
-      title: 'Équipement Professionnel',
-      description: 'Studio équipé avec du matériel de pointe pour une qualité sonore exceptionnelle'
-    },
-    {
-      icon: Award,
-      title: 'Expertise Reconnue',
-      description: '5 ans d\'expérience dans la production musicale avec des artistes renommés'
-    },
-    {
-      icon: Users,
-      title: 'Accompagnement Personnalisé',
-      description: 'Suivi individuel pour chaque projet, de la création à la finalisation'
-    },
-    {
-      icon: Zap,
-      title: 'Sessions Flexibles',
-      description: 'Créneaux adaptés à vos besoins, 7j/7 pour votre créativité'
-    }
-  ];
-
+const About = () => {
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <section id="about" className="py-20 bg-gradient-to-b from-black to-gray-900">
+      <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              À Propos du Studio
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+              À Propos de Westaf Studio
             </span>
           </h2>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            Studio Dakar Vibes est un espace créatif dédié à la production musicale professionnelle, 
-            situé au cœur de Dakar. Nous accompagnons les artistes dans la réalisation de leurs projets musicaux.
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Un studio d'enregistrement moderne au cœur de Dakar, équipé des dernières technologies 
+            pour donner vie à vos projets musicaux.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
-          {/* Studio Image */}
-          <div className="relative">
-            <div className="relative overflow-hidden rounded-2xl border border-purple-500/20">
-              <img 
-                src="/2.PNG"
-                alt="Studio Dakar Vibes - Vue intérieure"
-                className="w-full h-80 object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-purple-900/50 to-transparent"></div>
-              <div className="absolute bottom-4 left-4 right-4">
-                <h3 className="text-xl font-bold text-white mb-2">Studio Principal</h3>
-                <p className="text-gray-200 text-sm">Espace d'enregistrement acoustiquement traité</p>
-              </div>
-            </div>
-            
-            {/* Floating card */}
-            <div className="absolute -right-4 -bottom-4 bg-gray-800/90 backdrop-blur-md rounded-xl p-4 border border-cyan-500/20">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-cyan-400">24/7</div>
-                <div className="text-xs text-gray-300">Disponible</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Producer Info */}
+        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
           <div>
-            <h3 className="text-2xl font-bold mb-6 text-white">Producteur & Beatmaker</h3>
-            <div className="space-y-4 text-gray-300">
-              <p>
-                <strong className="text-purple-400">Mamadou Diallo</strong>, beatmaker professionnel basé à Dakar, 
-                spécialisé dans la fusion des sonorités africaines avec les genres urbains contemporains.
-              </p>
-              <p>
-                Avec plus de 5 années d'expérience, j'ai collaboré avec de nombreux artistes locaux et 
-                internationaux pour créer des productions uniques qui reflètent l'âme de la musique sénégalaise.
-              </p>
-              <p>
-                Mon approche combine techniques modernes et instruments traditionnels pour offrir 
-                un son authentique et innovant.
-              </p>
-            </div>
-
-            {/* Skills */}
-            <div className="mt-8">
-              <h4 className="text-lg font-semibold mb-4 text-white">Spécialités</h4>
-              <div className="flex flex-wrap gap-2">
-                {['Afrobeat', 'Trap', 'Hip-Hop', 'R&B', 'Afro-Trap', 'Dancehall'].map((skill) => (
-                  <span 
-                    key={skill}
-                    className="px-3 py-1 bg-gradient-to-r from-purple-600/20 to-cyan-600/20 rounded-full text-sm border border-purple-500/20 text-purple-300"
-                  >
-                    {skill}
-                  </span>
-                ))}
+            <h3 className="text-3xl font-bold text-white mb-6">
+              Notre <span className="text-orange-400">Vision</span>
+            </h3>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              Westaf Studio est né de la passion pour la musique et de l'envie de créer un espace 
+              où les artistes peuvent exprimer leur créativité sans limites. Nous combinons 
+              l'expertise technique avec une approche artistique pour offrir des productions 
+              de qualité internationale.
+            </p>
+            <p className="text-gray-300 leading-relaxed">
+              Notre mission est de démocratiser l'accès à un enregistrement professionnel 
+              tout en préservant l'authenticité et l'originalité de chaque artiste.
+            </p>
+          </div>
+          
+          <div className="relative">
+            <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl p-8 border border-orange-500/30">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Music className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-2">500+</h4>
+                  <p className="text-gray-300">Projets Réalisés</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-2">200+</h4>
+                  <p className="text-gray-300">Artistes Satisfaits</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Award className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-2">5</h4>
+                  <p className="text-gray-300">Années d'Expérience</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="text-2xl font-bold text-white mb-2">24/7</h4>
+                  <p className="text-gray-300">Support Client</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div 
-                key={index}
-                className="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 hover:transform hover:scale-105"
-              >
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-400 text-sm">{feature.description}</p>
-              </div>
-            );
-          })}
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-gradient-to-b from-orange-500/10 to-transparent p-8 rounded-2xl border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mb-6">
+              <Music className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Équipement Pro</h3>
+            <p className="text-gray-300">
+              Matériel haut de gamme : micros Neumann, préamplis SSL, monitoring Genelec 
+              pour une qualité sonore exceptionnelle.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-b from-red-500/10 to-transparent p-8 rounded-2xl border border-red-500/20 hover:border-red-500/40 transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-yellow-500 rounded-full flex items-center justify-center mb-6">
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Équipe Experte</h3>
+            <p className="text-gray-300">
+              Ingénieurs du son certifiés et producteurs expérimentés pour vous accompagner 
+              dans tous vos projets musicaux.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-b from-yellow-500/10 to-transparent p-8 rounded-2xl border border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mb-6">
+              <Zap className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">Innovation</h3>
+            <p className="text-gray-300">
+              Techniques d'enregistrement modernes et créatives pour créer un son unique 
+              qui vous démarque de la concurrence.
+            </p>
+          </div>
         </div>
       </div>
     </section>

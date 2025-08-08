@@ -3,17 +3,17 @@ import { Music, Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide
 
 const Footer: React.FC = () => {
   const socialLinks = [
-    { icon: Instagram, name: 'Instagram', url: '#' },
+    { icon: Instagram, name: 'Instagram', url: 'https://www.instagram.com/jeuuss_beatz' },
     { icon: Facebook, name: 'Facebook', url: '#' },
     { icon: Twitter, name: 'Twitter', url: '#' }
   ];
 
   const quickLinks = [
-    { name: 'Accueil', href: '#' },
-    { name: 'Réservation', href: '#' },
-    { name: 'Tarifs', href: '#' },
-    { name: 'Productions', href: '#' },
-    { name: 'Contact', href: '#' }
+    { name: 'Accueil', section: 'accueil' },
+    { name: 'Réservation', section: 'reservation' },
+    { name: 'Tarifs', section: 'tarifs' },
+    { name: 'Productions', section: 'productions' },
+    { name: 'Contact', section: 'contact' }
   ];
 
   const services = [
@@ -31,12 +31,12 @@ const Footer: React.FC = () => {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
                 <Music className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  Studio Dakar Vibes
+                <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                  Westaf Studio
                 </h3>
                 <p className="text-xs text-gray-400">Beatmaker Professionnel</p>
               </div>
@@ -66,9 +66,12 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a href={link.href} className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <button 
+                    onClick={() => window.dispatchEvent(new CustomEvent('navigateFromFooter', { detail: link.section }))}
+                    className="text-gray-400 hover:text-white transition-colors text-sm text-left"
+                  >
                     {link.name}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -91,15 +94,15 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold text-white mb-4">Contact</h4>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <Phone className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-400 text-sm">+221 77 123 45 67</span>
+                <Phone className="w-4 h-4 text-orange-400" />
+                <span className="text-gray-400 text-sm">+221 78 540 64 37</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-cyan-400" />
-                <span className="text-gray-400 text-sm">contact@studiodakarvibes.com</span>
+                <Mail className="w-4 h-4 text-red-400" />
+                <span className="text-gray-400 text-sm">contact@westafstudio.com</span>
               </div>
               <div className="flex items-center space-x-3">
-                <MapPin className="w-4 h-4 text-red-400" />
+                <MapPin className="w-4 h-4 text-yellow-400" />
                 <span className="text-gray-400 text-sm">Almadies, Dakar</span>
               </div>
             </div>
@@ -110,7 +113,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 Studio Dakar Vibes. Tous droits réservés.
+              © 2024 Westaf Studio. Tous droits réservés.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
