@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Instagram, Clock } from 'lucide-react';
 
 const Contact = () => {
