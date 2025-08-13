@@ -12,14 +12,16 @@ const Footer: React.FC = () => {
     { name: 'Accueil', section: 'accueil' },
     { name: 'Réservation', section: 'reservation' },
     { name: 'Tarifs', section: 'tarifs' },
-    { name: 'Productions', section: 'productions' },
+    { name: 'Compositions', section: 'productions' },
     { name: 'Contact', section: 'contact' }
   ];
 
   const services = [
     'Enregistrement Studio',
-    'Production de Beats',
+    'Composition musicale',
     'Mix & Mastering',
+    'Voix off',
+    'Conception de jingle',
     'Coaching Vocal',
     'Direction Artistique'
   ];
@@ -95,7 +97,10 @@ const Footer: React.FC = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-orange-400" />
-                <span className="text-gray-400 text-sm">+221 78 540 64 37</span>
+                <div className="text-gray-400 text-sm space-y-1">
+                  <div>+221 71 016 23 23</div>
+                  <div>+221 33 825 79 51</div>
+                </div>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-red-400" />

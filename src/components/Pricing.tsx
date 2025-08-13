@@ -9,7 +9,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
   const studioPackages = [
     {
       name: "1 Heure",
-      price: "50,000",
+      price: "30,000",
       duration: "1h",
       description: "Session courte",
       features: [
@@ -24,7 +24,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
     },
     {
       name: "4 Heures",
-      price: "200,000",
+      price: "120,000",
       duration: "4h",
       description: "Le plus populaire",
       features: [
@@ -40,7 +40,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
     },
     {
       name: "8 Heures",
-      price: "400,000",
+      price: "240,000",
       duration: "8h",
       description: "Session complète",
       features: [
@@ -99,7 +99,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
             Studio disponible 24h/24 - Réservation par heure
           </p>
           <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg p-4 max-w-md mx-auto border border-orange-500/30">
-            <p className="text-orange-400 font-semibold text-lg">50,000 FCFA / Heure</p>
+            <p className="text-orange-400 font-semibold text-lg">30,000 FCFA / Heure</p>
             <p className="text-gray-300 text-sm">Tarif unique - Studio ouvert 24h/24</p>
           </div>
         </div>

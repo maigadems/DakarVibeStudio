@@ -105,7 +105,7 @@ const Calendar: React.FC = () => {
   };
 
   const getTotalPrice = () => {
-    return selectedSlots.length * 50000;
+    return selectedSlots.length * 30000;
   };
 
   const handlePayment = (e: React.FormEvent) => {
@@ -185,7 +185,7 @@ Montant payé: ${reservationData.totalPrice.toLocaleString()} FCFA via Wave
 
 Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`;
 
-    const whatsappUrl = `https://wa.me/221785406437?text=${encodeURIComponent(whatsappMessage)}`;
+    const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(whatsappUrl, '_blank');
     
     // Marquer les créneaux comme réservés
@@ -214,7 +214,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
   };
 
   const handleCall = () => {
-    window.location.href = 'tel:+221785406437';
+    window.location.href = 'tel:+221710162323';
   };
 
   // Obtenir les statistiques pour affichage (optionnel)
@@ -332,7 +332,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
               <div className="space-y-2 text-gray-300">
                 <div className="flex justify-between">
                   <span>Tarif par heure</span>
-                  <span className="text-orange-400 font-semibold">50 000 FCFA</span>
+                  <span className="text-orange-400 font-semibold">30 000 FCFA</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Mixage de titre</span>

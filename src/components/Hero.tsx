@@ -57,7 +57,7 @@ const Hero = () => {
             </div>
             <div className="flex items-center space-x-2 bg-yellow-500/10 px-4 py-2 rounded-full border border-yellow-500/30">
               <Music className="w-5 h-5 text-yellow-400" />
-              <span className="text-white">Production Beats</span>
+              <span className="text-white">Composition musicale</span>
             </div>
           </div>
 

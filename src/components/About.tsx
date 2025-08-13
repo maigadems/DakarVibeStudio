@@ -2,6 +2,18 @@ import React from 'react';
 import { Music, Award, Users, Zap } from 'lucide-react';
 
 const About = () => {
+  const services = [
+    'Enregistrement Studio',
+    'Composition musicale',
+    'Mix & Mastering',
+    'Voix off',
+    'Conception de jingle',
+    'Voix off',
+    'Conception de jingle',
+    'Coaching Vocal',
+    'Direction Artistique'
+  ];
+
   return (
     <section id="about" className="py-20 bg-gradient-to-b from-black to-gray-900">
       <div className="container mx-auto px-4">
