@@ -96,11 +96,11 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
             Nos Tarifs
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
-            Studio disponible 24h/24 - Réservation par heure
+            Studio disponible 6j/7 - Réservation par heure
           </p>
           <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg p-4 max-w-md mx-auto border border-orange-500/30">
             <p className="text-orange-400 font-semibold text-lg">30,000 FCFA / Heure</p>
-            <p className="text-gray-300 text-sm">Tarif unique - Studio ouvert 24h/24</p>
+            <p className="text-gray-300 text-sm">Tarif unique - Lundi au samedi, 9h-22h</p>
           </div>
         </div>
 
@@ -237,9 +237,9 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
 
         <div className="text-center">
           <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl p-6 max-w-2xl mx-auto border border-orange-500/20">
-            <h4 className="text-xl font-bold text-white mb-2">Studio Ouvert 24h/24</h4>
+            <h4 className="text-xl font-bold text-white mb-2">Studio Ouvert 6j/7</h4>
             <p className="text-gray-300 mb-4">
-              Réservez votre créneau à n'importe quelle heure du jour ou de la nuit
+              Réservez votre créneau du lundi au samedi, de 9h à 22h
             </p>
             <button
               onClick={() => {
