@@ -49,15 +49,24 @@ const Calendar: React.FC = () => {
   const generateDates = () => {
     const dates = [];
     const today = new Date();
-    for (let i = 0; i < 14; i++) {
+    let daysAdded = 0;
+    let i = 0;
+    
+    while (daysAdded < 14) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      dates.push({
-        date: date.toISOString().split('T')[0],
-        day: date.getDate(),
-        month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-        weekday: date.toLocaleDateString('fr-FR', { weekday: 'short' })
-      });
+      
+      // Exclure les dimanches (0 = dimanche)
+      if (date.getDay() !== 0) {
+        dates.push({
+          date: date.toISOString().split('T')[0],
+          day: date.getDate(),
+          month: date.toLocaleDateString('fr-FR', { month: 'short' }),
+          weekday: date.toLocaleDateString('fr-FR', { weekday: 'short' })
+        });
+        daysAdded++;
+      }
+      i++;
     }
     return dates;
   };
@@ -343,7 +352,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
                   <span className="text-yellow-400 font-semibold">70 000 FCFA</span>
                 </div>
                 <div className="text-xs text-gray-400 mt-2">
-                  * Studio ouvert 24h/24 - Paiement échelonné possible pour mixage
+                  * Studio ouvert 6j/7 (Lun-Sam) - Paiement échelonné possible pour mixage
                 </div>
                 <div className="text-xs text-orange-400 mt-2">
                   ℹ️ Les réservations se réinitialisent automatiquement chaque 1er du mois

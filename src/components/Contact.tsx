@@ -120,8 +120,8 @@ ${formData.message}`;
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Horaires</h3>
                 <div className="text-gray-300 space-y-1">
-                  <p>Lundi - Vendredi: 9h - 22h</p>
-                  <p>Samedi - Dimanche: 10h - 20h</p>
+                  <p>Lundi - Samedi: 9h - 22h</p>
+                  <p>Dimanche: Fermé</p>
                 </div>
                 <p className="text-sm text-gray-400">Sessions sur rendez-vous</p>
               </div>
