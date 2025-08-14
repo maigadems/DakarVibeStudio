@@ -340,7 +340,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
                 </div>
                 <div className="flex justify-between">
                   <span>Mastering</span>
-                  <span className="text-yellow-400 font-semibold">100 000 FCFA</span>
+                  <span className="text-yellow-400 font-semibold">70 000 FCFA</span>
                 </div>
                 <div className="text-xs text-gray-400 mt-2">
                   * Studio ouvert 24h/24 - Paiement échelonné possible pour mixage

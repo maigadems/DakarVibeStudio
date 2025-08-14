@@ -79,7 +79,7 @@ ${formData.message}`;
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Email</h3>
-                <p className="text-gray-300">contact@westafstudio.com</p>
+                <p className="text-gray-300">booking.westafrecords@gmail.com</p>
                 <p className="text-sm text-gray-400">Réponse sous 24h</p>
               </div>
             </div>

@@ -74,7 +74,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
     },
     {
       name: "Mastering",
-      price: "100,000",
+      price: "70,000",
       description: "Finalisation de votre titre",
       features: [
         "Mastering professionnel",

@@ -131,6 +131,29 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
 
           {/* CTA */}
           <div className="text-center mt-12">
+            {/* Section Playlist */}
+            <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 backdrop-blur-md rounded-2xl p-8 mb-8 border border-purple-500/20">
+              <h4 className="text-2xl font-bold text-white mb-4">
+                🎵 Découvrez Toutes Nos Productions
+              </h4>
+              <p className="text-gray-300 mb-6">
+                Écoutez l'intégralité de nos créations musicales dans notre playlist officielle
+              </p>
+              <a
+                href="https://music.apple.com/fr/playlist/mbalax/pl.u-oZyllYaIRWNp6r8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-105"
+              >
+                <span>🎧</span>
+                <span>Écouter la Playlist Complète</span>
+                <ExternalLink className="w-5 h-5" />
+              </a>
+              <div className="mt-4 text-sm text-gray-400">
+                Disponible sur Apple Music
+              </div>
+            </div>
+
             <button
               onClick={() => {
                 setCurrentSection('reservation');
