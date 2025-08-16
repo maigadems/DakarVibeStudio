@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Instagram, Clock } from 'lucide-react';
+import { Phone, Mail, MapPin, Instagram, Clock, Ghost } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -102,19 +102,36 @@ ${formData.message}`;
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Instagram</h3>
                 <a 
-                  href="https://www.instagram.com/jeuuss_beatz" 
+                  href="https://www.instagram.com/westafrecords?igsh=MTFuNWEyNG5mYWpxeQ%3D%3D&utm_source=qr" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-orange-400 hover:text-orange-300 transition-colors"
                 >
-                  @jeuuss_beatz
+                  @westafrecords
                 </a>
                 <p className="text-sm text-gray-400">Suivez nos dernières créations</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-yellow-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Ghost className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Snapchat</h3>
+                <a 
+                  href="https://t.snapchat.com/Y4O4g5fy" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                >
+                  Westaf Records
+                </a>
+                <p className="text-sm text-gray-400">Découvrez nos coulisses</p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <Clock className="w-6 h-6 text-white" />
               </div>
               <div>

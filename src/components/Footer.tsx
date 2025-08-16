@@ -1,9 +1,10 @@
 import React from 'react';
-import { Music, Mail, Phone, MapPin, Instagram, Facebook, Twitter } from 'lucide-react';
+import { Music, Mail, Phone, MapPin, Instagram, Facebook, Twitter, Camera, Ghost } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const socialLinks = [
-    { icon: Instagram, name: 'Instagram', url: 'https://www.instagram.com/jeuuss_beatz' },
+    { icon: Instagram, name: 'Instagram', url: 'https://www.instagram.com/westafrecords?igsh=MTFuNWEyNG5mYWpxeQ%3D%3D&utm_source=qr' },
+    { icon: Ghost, name: 'Snapchat', url: 'https://t.snapchat.com/Y4O4g5fy' },
     { icon: Facebook, name: 'Facebook', url: '#' },
     { icon: Twitter, name: 'Twitter', url: '#' }
   ];
@@ -53,7 +54,10 @@ const Footer: React.FC = () => {
                   <a
                     key={index}
                     href={social.url}
+                   target="_blank"
+                   rel="noopener noreferrer"
                     className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors text-gray-400 hover:text-white"
+                   title={social.name}
                   >
                     <Icon className="w-4 h-4" />
                   </a>
