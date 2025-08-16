@@ -134,7 +134,7 @@ const Calendar: React.FC = () => {
     
     // Rediriger vers Wave pour le paiement
     const totalAmount = getTotalPrice();
-    const wavePaymentUrl = `https://pay.wave.com/m/M_sn_uas2k2yeBltT/c/sn/?amount=${totalAmount}`;
+    const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
     
     // Sauvegarder les données dans le localStorage pour les récupérer après paiement
     const reservationData = {

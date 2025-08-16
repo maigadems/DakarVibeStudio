@@ -32,10 +32,6 @@ const Hero = () => {
             <span className="bg-gradient-to-r from-orange-400 via-red-500 to-yellow-500 bg-clip-text text-transparent animate-pulse">
               WESTAF RECORDS
             </span>
-            <br />
-            <span className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-              STUDIO
-            </span>
           </h1>
 
           {/* Subtitle */}
