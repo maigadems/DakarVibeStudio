@@ -57,7 +57,7 @@ const Calendar: React.FC = () => {
           // Calculer la différence en minutes
           const timeDifference = (slotStartTime.getTime() - now.getTime()) / (1000 * 60);
           
-          if (timeDifference < 30) {
+          if (timeDifference < 20) {
             return 'too_late';
           }
         }
@@ -67,7 +67,9 @@ const Calendar: React.FC = () => {
     }));
   };
 
-  const timeSlots = selectedDate ? getTimeSlotsForDate(selectedDate) : baseTimeSlots.map(slot => ({ ...slot, status: 'available' }));
+  const timeSlots = selectedDate 
+    ? getTimeSlotsForDate(selectedDate).filter(slot => slot.status !== 'too_late')
+    : baseTimeSlots.map(slot => ({ ...slot, status: 'available' }));
 
   // Generate next 14 days
   const generateDates = () => {
@@ -320,9 +322,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
                           ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg'
                           : slot.status === 'available' 
                             ? 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700'
-                            : slot.status === 'booked'
-                              ? 'bg-red-900/30 text-red-400 cursor-not-allowed border border-red-700/50'
-                              : 'bg-yellow-900/30 text-yellow-400 cursor-not-allowed border border-yellow-700/50'
+                            : 'bg-red-900/30 text-red-400 cursor-not-allowed border border-red-700/50'
                       }`}
                     >
                       <div className="flex justify-between items-center">
@@ -332,17 +332,13 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
                             ? 'bg-orange-500/20 text-orange-300'
                             : slot.status === 'available' 
                               ? 'bg-green-500/20 text-green-400'
-                              : slot.status === 'booked'
-                                ? 'bg-red-500/20 text-red-400'
-                                : 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-red-500/20 text-red-400'
                         }`}>
                           {selectedSlots.includes(slot.id) 
                             ? 'Sélectionné'
                             : slot.status === 'available' 
                               ? 'Disponible'
-                              : slot.status === 'booked'
-                                ? 'Réservé'
-                                : 'Trop tard'
+                              : 'Réservé'
                           }
                         </span>
                       </div>
@@ -388,7 +384,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
                   ℹ️ Les réservations se réinitialisent automatiquement chaque 1er du mois
                 </div>
                 <div className="text-xs text-yellow-400 mt-1">
-                  ⏰ Réservation minimum 30 minutes à l'avance
+                  ⏰ Réservation minimum 20 minutes à l'avance
                 </div>
               </div>
             </div>
