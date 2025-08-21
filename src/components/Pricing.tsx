@@ -219,12 +219,11 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
 
                   <button
                     onClick={() => {
-                      // Aller à la page contact et scroller vers le formulaire
                       setCurrentSection('contact');
                       setTimeout(() => {
-                        const contactForm = document.querySelector('form');
+                        const contactForm = document.getElementById('contact-form');
                         if (contactForm) {
-                          contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
                         }
                       }, 100);
                     }}
@@ -246,12 +245,11 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
             </p>
             <button
               onClick={() => {
-                // Aller à la page contact et scroller vers le formulaire
                 setCurrentSection('contact');
                 setTimeout(() => {
-                  const contactForm = document.querySelector('form');
+                  const contactForm = document.getElementById('contact-form');
                   if (contactForm) {
-                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
                   }
                 }, 100);
               }}

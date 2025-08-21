@@ -146,7 +146,7 @@ ${formData.message}`;
           </div>
 
           {/* Contact Form */}
-          <div className="bg-gradient-to-b from-orange-500/10 to-red-500/10 p-8 rounded-2xl border border-orange-500/20">
+          <div id="contact-form" className="bg-gradient-to-b from-orange-500/10 to-red-500/10 p-8 rounded-2xl border border-orange-500/20 scroll-mt-24">
             <h3 className="text-2xl font-bold text-white mb-6">Envoyez-nous un message</h3>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

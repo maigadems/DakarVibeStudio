@@ -256,7 +256,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
   const stats = getBookingStats();
 
   return (
-    <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 bg-gray-900">
+    <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">

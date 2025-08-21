@@ -39,7 +39,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
   };
 
   return (
-    <section id="audio" className="py-20 bg-gray-900 text-white relative overflow-hidden">
+    <section id="audio" className="py-20 bg-gray-900 text-white relative overflow-hidden scroll-mt-20">
       {/* Bannière d'arrière-plan */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
@@ -209,9 +209,9 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
                   // Aller à la page contact et scroller vers le formulaire
                   setCurrentSection('contact');
                   setTimeout(() => {
-                    const contactForm = document.querySelector('form');
+                    const contactForm = document.getElementById('contact-form');
                     if (contactForm) {
-                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
                     }
                   }, 100);
                 }}
@@ -247,9 +247,9 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
                   // Aller à la page contact et scroller vers le formulaire
                   setCurrentSection('contact');
                   setTimeout(() => {
-                    const contactForm = document.querySelector('form');
+                    const contactForm = document.getElementById('contact-form');
                     if (contactForm) {
-                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
                     }
                   }, 100);
                 }}
@@ -269,9 +269,9 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
                 // Aller à la page contact et scroller vers le formulaire
                 setCurrentSection('contact');
                 setTimeout(() => {
-                  const contactForm = document.querySelector('form');
+                  const contactForm = document.getElementById('contact-form');
                   if (contactForm) {
-                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
                   }
                 }, 100);
               }}
