@@ -3,7 +3,10 @@ import { Play, Music, Headphones, Volume2 } from 'lucide-react';
 
 const Hero = () => {
   const handleReservation = () => {
-    window.dispatchEvent(new CustomEvent('navigateToReservation'));
+    // Créer un événement personnalisé avec les détails de navigation
+    window.dispatchEvent(new CustomEvent('navigateToReservation', { 
+      detail: { fromSection: 'accueil', toSection: 'reservation' }
+    }));
   };
 
   return (

@@ -158,11 +158,10 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
 
                   <button
                     onClick={() => {
-                      setCurrentSection('reservation');
-                      // Force scroll vers le haut avec un délai pour mobile
-                      setTimeout(() => {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }, 50);
+                      // Émettre un événement pour gérer la navigation avec historique
+                      window.dispatchEvent(new CustomEvent('navigateWithHistory', { 
+                        detail: { fromSection: 'tarifs', toSection: 'reservation' }
+                      }));
                     }}
                     className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 ${
                       plan.popular
@@ -245,13 +244,10 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
             </p>
             <button
               onClick={() => {
-                setCurrentSection('contact');
-                setTimeout(() => {
-                  const contactForm = document.getElementById('contact-form');
-                  if (contactForm) {
-                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-                  }
-                }, 100);
+                // Émettre un événement pour gérer la navigation avec historique
+                window.dispatchEvent(new CustomEvent('navigateWithHistory', { 
+                  detail: { fromSection: 'tarifs', toSection: 'contact' }
+                }));
               }}
               className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
             >

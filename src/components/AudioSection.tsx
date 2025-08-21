@@ -266,14 +266,10 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
             </p>
             <button
               onClick={() => {
-                // Aller à la page contact et scroller vers le formulaire
-                setCurrentSection('contact');
-                setTimeout(() => {
-                  const contactForm = document.getElementById('contact-form');
-                  if (contactForm) {
-                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-                  }
-                }, 100);
+                // Émettre un événement pour gérer la navigation avec historique
+                window.dispatchEvent(new CustomEvent('navigateWithHistory', { 
+                  detail: { fromSection: 'accueil', toSection: 'contact' }
+                }));
               }}
               className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-yellow-500/25"
             >
