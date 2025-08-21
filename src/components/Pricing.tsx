@@ -219,11 +219,14 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
 
                   <button
                     onClick={() => {
+                      // Aller à la page contact et scroller vers le formulaire
                       setCurrentSection('contact');
-                      // Force scroll vers le haut avec un délai pour mobile
                       setTimeout(() => {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }, 50);
+                        const contactForm = document.querySelector('form');
+                        if (contactForm) {
+                          contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 100);
                     }}
                     className="w-full py-3 rounded-xl font-semibold bg-gray-700 text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-500 transition-all duration-300"
                   >
@@ -243,11 +246,14 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
             </p>
             <button
               onClick={() => {
+                // Aller à la page contact et scroller vers le formulaire
                 setCurrentSection('contact');
-                // Force scroll vers le haut avec un délai pour mobile
                 setTimeout(() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 50);
+                  const contactForm = document.querySelector('form');
+                  if (contactForm) {
+                    contactForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }, 100);
               }}
               className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
             >
