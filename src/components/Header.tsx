@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Music } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 interface HeaderProps {
   currentSection: string;
@@ -16,13 +16,17 @@ const Header: React.FC<HeaderProps> = ({ currentSection, setCurrentSection }) =>
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-sm border-b border-orange-500/20">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-1">
         <div className="flex items-center justify-between">
           <button 
             onClick={() => handleNavigation('accueil')}
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity duration-300"
           >
-            <Music className="w-8 h-8 text-orange-500" />
+            <img 
+              src="/logo.jpg" 
+              alt="Westaf Records Logo" 
+              className="w-16 h-16 rounded-full object-cover shadow-lg border-2 border-orange-500 flex-shrink-0"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
               Westaf Records
             </span>

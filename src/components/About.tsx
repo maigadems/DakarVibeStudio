@@ -47,37 +47,12 @@ const About = () => {
           </div>
           
           <div className="relative">
-            <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-2xl p-8 border border-orange-500/30">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Music className="w-8 h-8 text-white" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-2">500+</h4>
-                  <p className="text-gray-300">Projets Réalisés</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-2">200+</h4>
-                  <p className="text-gray-300">Artistes Satisfaits</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="w-8 h-8 text-white" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-2">5</h4>
-                  <p className="text-gray-300">Années d'Expérience</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-8 h-8 text-white" />
-                  </div>
-                  <h4 className="text-2xl font-bold text-white mb-2">24/7</h4>
-                  <p className="text-gray-300">Support Client</p>
-                </div>
-              </div>
+            <div className="rounded-2xl overflow-hidden border border-orange-500/30 shadow-2xl">
+              <img 
+                src="/WestAf Record-15.jpg" 
+                alt="Studio Westaf Records - Équipement professionnel" 
+                className="w-full h-auto object-cover"
+              />
             </div>
           </div>
         </div>

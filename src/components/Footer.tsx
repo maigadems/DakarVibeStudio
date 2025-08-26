@@ -1,5 +1,5 @@
 import React from 'react';
-import { Music, Mail, Phone, MapPin, Instagram, Facebook, Twitter, Camera, Ghost } from 'lucide-react';
+import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Camera, Ghost } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const socialLinks = [
@@ -34,14 +34,18 @@ const Footer: React.FC = () => {
           {/* Brand Section */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <Music className="w-6 h-6 text-white" />
+              <div className="w-20 h-20 rounded-lg flex items-center justify-center shadow-lg p-0.5 bg-gradient-to-r from-orange-500 to-red-500">
+                <img 
+                  src="/logo.jpg" 
+                  alt="Westaf Records Logo" 
+                  className="w-full h-full rounded-lg object-cover"
+                />
               </div>
               <div>
                 <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                  Westaf Studio
+                  Westaf Records
                 </h3>
-                <p className="text-xs text-gray-400">Beatmaker Professionnel</p>
+                <p className="text-xs text-gray-400">Studio d'enregistrement professionnel à Dakar</p>
               </div>
             </div>
             <p className="text-gray-400 text-sm mb-6">

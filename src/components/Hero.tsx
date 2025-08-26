@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Music, Headphones, Volume2 } from 'lucide-react';
+import { Play, Headphones, Volume2, Music } from 'lucide-react';
 
 const Hero = () => {
   const handleReservation = () => {
@@ -22,11 +22,15 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto">
           {/* Logo/Icon */}
           <div className="mb-8 flex justify-center">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50">
-                <Music className="w-12 h-12 text-white" />
+            <div className="relative z-20">
+              <div className="w-32 h-32 rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50 p-0.5 bg-gradient-to-r from-orange-500 to-red-500">
+                <img 
+                  src="/logo.jpg" 
+                  alt="Westaf Records Logo" 
+                  className="w-full h-full rounded-full object-cover"
+                />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-full blur-xl opacity-30 animate-pulse -z-10"></div>
             </div>
           </div>
 
