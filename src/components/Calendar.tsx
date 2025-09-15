@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye } from 'lucide-react';
 import { loadBookingData, addBooking, getBookingStats } from '../utils/bookingStorage';
 
 const Calendar: React.FC = () => {
@@ -7,6 +7,9 @@ const Calendar: React.FC = () => {
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [bookedSlots, setBookedSlots] = useState<{[key: string]: string[]}>(() => loadBookingData());
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminCredentials, setAdminCredentials] = useState({ login: '', password: '' });
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -158,50 +161,30 @@ const Calendar: React.FC = () => {
       return;
     }
     
+    // Enregistrer immédiatement la réservation
+    addBooking(selectedDate, selectedSlots);
+    
+    // Mettre à jour l'état local pour refléter la réservation
+    setBookedSlots(loadBookingData());
+    
     // Rediriger vers Wave pour le paiement
     const totalAmount = getTotalPrice();
     const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
     
-    // Sauvegarder les données dans le localStorage pour les récupérer après paiement
-    const reservationData = {
-      selectedDate,
-      selectedSlots,
-      formData,
-      totalPrice: totalAmount,
-      timestamp: Date.now()
-    };
-    localStorage.setItem('pendingReservation', JSON.stringify(reservationData));
-    
     // Ouvrir Wave dans un nouvel onglet
     window.open(wavePaymentUrl, '_blank');
     
-    // Simuler la completion du paiement après 3 secondes (en réalité, cela devrait être géré par un webhook Wave)
-    setTimeout(() => {
-      setPaymentCompleted(true);
-    }, 3000);
-  };
-
-  const handleWhatsAppSend = () => {
-    // Récupérer les données sauvegardées
-    const savedData = localStorage.getItem('pendingReservation');
-    if (!savedData) {
-      setErrorMessage('Erreur: Données de réservation non trouvées. Veuillez recommencer.');
-      return;
-    }
-
-    const reservationData = JSON.parse(savedData);
-    
-    // Créer le message WhatsApp
-    const selectedSlotsText = reservationData.selectedSlots.length === 1 
-      ? baseTimeSlots.find(slot => slot.id === reservationData.selectedSlots[0])?.time
+    // Créer le message WhatsApp avec les détails de la réservation
+    const selectedSlotsText = selectedSlots.length === 1 
+      ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
       : (() => {
-          const firstSlot = baseTimeSlots.find(slot => slot.id === reservationData.selectedSlots[0]);
-          const lastSlot = baseTimeSlots.find(slot => slot.id === reservationData.selectedSlots[reservationData.selectedSlots.length - 1]);
+          const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
+          const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
           const endTime = lastSlot?.time.split(' - ')[1];
           return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
         })();
         
-    const selectedDateFormatted = new Date(reservationData.selectedDate).toLocaleDateString('fr-FR', { 
+    const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
@@ -210,31 +193,24 @@ const Calendar: React.FC = () => {
     
     const whatsappMessage = `Bonjour, j'ai effectué le paiement pour ma réservation au Westaf Studio.
 
-Nom complet: ${reservationData.formData.nom}
-Email: ${reservationData.formData.email}
-Téléphone: ${reservationData.formData.telephone}
+Nom complet: ${formData.nom}
+Email: ${formData.email}
+Téléphone: ${formData.telephone}
 Date souhaitée: ${selectedDateFormatted}
 Créneau: ${selectedSlotsText}
-Durée: ${reservationData.selectedSlots.length} heure(s)
-Montant payé: ${reservationData.totalPrice.toLocaleString()} FCFA via Wave
+Durée: ${selectedSlots.length} heure(s)
+Montant payé: ${totalAmount.toLocaleString()} FCFA via Wave
 
-Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`;
+Message: ${formData.message || 'Aucun message supplémentaire'}`;
 
     const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
-    window.open(whatsappUrl, '_blank');
     
-    // Marquer les créneaux comme réservés
-    // Ajouter la réservation au stockage persistant
-    addBooking(reservationData.selectedDate, reservationData.selectedSlots);
-    
-    // Mettre à jour l'état local
-    setBookedSlots(loadBookingData());
-    
-    // Nettoyer les données sauvegardées
-    localStorage.removeItem('pendingReservation');
+    // Ouvrir WhatsApp dans un nouvel onglet après un court délai
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank');
+    }, 1000);
     
     // Réinitialiser le formulaire
-    setPaymentCompleted(false);
     setSelectedDate('');
     setSelectedSlots([]);
     setFormData({
@@ -245,7 +221,7 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
     });
     setErrorMessage('');
     
-    alert('Réservation confirmée ! Vous allez être redirigé vers WhatsApp.');
+    alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
   };
 
   const handleCall = () => {
@@ -255,11 +231,41 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
   // Obtenir les statistiques pour affichage (optionnel)
   const stats = getBookingStats();
 
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminCredentials.login === 'JeussW' && adminCredentials.password === 'JeussW') {
+      setIsAdminAuthenticated(true);
+    } else {
+      alert('Identifiants incorrects');
+      setAdminCredentials({ login: '', password: '' });
+    }
+  };
+
+  const closeAdminModal = () => {
+    setShowAdminModal(false);
+    setIsAdminAuthenticated(false);
+    setAdminCredentials({ login: '', password: '' });
+  };
+
+  const formatDateForDisplay = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getSlotTime = (slotId: string) => {
+    const slot = baseTimeSlots.find(s => s.id === slotId);
+    return slot ? slot.time : slotId;
+  };
+
   return (
     <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 relative">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">
             <span className="bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
               Réserver Une Session
@@ -271,6 +277,15 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
           <div className="mt-4 text-sm text-gray-400">
             📊 Ce mois ({stats.currentMonth}) : {stats.totalSlots} créneaux réservés sur {stats.totalDays} jours
           </div>
+          
+          {/* Bouton Admin discret */}
+          <button
+            onClick={() => setShowAdminModal(true)}
+            className="absolute top-0 right-0 w-6 h-6 bg-gray-800/50 hover:bg-gray-700/50 rounded-full flex items-center justify-center opacity-30 hover:opacity-60 transition-all duration-300"
+            title="Administration"
+          >
+            <Settings className="w-3 h-3 text-gray-400" />
+          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
@@ -484,36 +499,12 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
 
               <button
                 type="submit"
-                disabled={paymentCompleted}
-                className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 ${
-                  paymentCompleted 
-                    ? 'bg-gray-600 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-500 text-white'
-                }`}
+                className="w-full font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white"
               >
                 <CreditCard className="w-5 h-5" />
-                <span>{paymentCompleted ? 'Paiement en cours...' : 'Payer par Wave'}</span>
+                <span>Payer par Wave</span>
               </button>
 
-              {paymentCompleted && (
-                <div className="bg-green-600/20 border border-green-500/30 rounded-lg p-4">
-                  <div className="text-center">
-                    <div className="text-green-400 font-semibold mb-2">✅ Paiement effectué avec succès !</div>
-                    <p className="text-gray-300 text-sm mb-4">
-                      Cliquez sur le bouton ci-dessous pour confirmer votre réservation via WhatsApp
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleWhatsAppSend}
-                      className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 mx-auto"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      <span>Confirmer via WhatsApp</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-              
               <button
                 type="button"
                 onClick={handleCall}
@@ -526,6 +517,137 @@ Message: ${reservationData.formData.message || 'Aucun message supplémentaire'}`
           </div>
         </div>
       </div>
+
+      {/* Modal Admin */}
+      {showAdminModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-orange-500/20">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">
+                {isAdminAuthenticated ? 'Panneau d\'Administration' : 'Connexion Admin'}
+              </h3>
+              <button
+                onClick={closeAdminModal}
+                className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+
+            {!isAdminAuthenticated ? (
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Login
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={adminCredentials.login}
+                    onChange={(e) => setAdminCredentials({ ...adminCredentials, login: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    placeholder="Entrez votre login"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    value={adminCredentials.password}
+                    onChange={(e) => setAdminCredentials({ ...adminCredentials, password: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                    placeholder="Entrez votre mot de passe"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300"
+                >
+                  Se connecter
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                {/* Statistiques */}
+                <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-lg p-4 border border-orange-500/20">
+                  <h4 className="text-lg font-semibold text-white mb-2">Statistiques du mois</h4>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-orange-400">{stats.totalSlots}</div>
+                      <div className="text-sm text-gray-400">Créneaux réservés</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-red-400">{stats.totalDays}</div>
+                      <div className="text-sm text-gray-400">Jours avec réservations</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-yellow-400">{(stats.totalSlots * 30000).toLocaleString()}</div>
+                      <div className="text-sm text-gray-400">FCFA (estimation)</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Liste des réservations */}
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                    <Eye className="w-5 h-5 mr-2 text-orange-400" />
+                    Toutes les réservations
+                  </h4>
+                  
+                  {Object.keys(bookedSlots).length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      Aucune réservation pour ce mois
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-96 overflow-y-auto">
+                      {Object.entries(bookedSlots)
+                        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
+                        .map(([date, slots]) => (
+                        <div key={date} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h5 className="font-semibold text-white">{formatDateForDisplay(date)}</h5>
+                              <p className="text-sm text-gray-400">{date}</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-orange-400 font-semibold">
+                                {slots.length} créneau{slots.length > 1 ? 'x' : ''}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {(slots.length * 30000).toLocaleString()} FCFA
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {slots.map((slotId) => (
+                              <span
+                                key={slotId}
+                                className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm border border-orange-500/30"
+                              >
+                                {getSlotTime(slotId)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions admin */}
+                <div className="border-t border-gray-600 pt-4">
+                  <div className="text-xs text-gray-400 text-center">
+                    💡 Les réservations se réinitialisent automatiquement chaque 1er du mois
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 };
