@@ -39,7 +39,7 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
   };
 
   return (
-    <section id="audio" className="py-20 bg-gray-900 text-white relative overflow-hidden">
+    <section id="audio" className="py-20 bg-gray-900 text-white relative overflow-hidden scroll-mt-20">
       {/* Bannière d'arrière-plan */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
@@ -206,10 +206,14 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
               </ul>
               <button
                 onClick={() => {
+                  // Aller à la page contact et scroller vers le formulaire
                   setCurrentSection('contact');
                   setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }, 50);
+                    const contactForm = document.getElementById('contact-form');
+                    if (contactForm) {
+                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                    }
+                  }, 100);
                 }}
                 className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
               >
@@ -240,10 +244,14 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
               </ul>
               <button
                 onClick={() => {
+                  // Aller à la page contact et scroller vers le formulaire
                   setCurrentSection('contact');
                   setTimeout(() => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }, 50);
+                    const contactForm = document.getElementById('contact-form');
+                    if (contactForm) {
+                      contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                    }
+                  }, 100);
                 }}
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-cyan-600 transition-all duration-300"
               >
@@ -258,10 +266,10 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
             </p>
             <button
               onClick={() => {
-                setCurrentSection('contact');
-                setTimeout(() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 50);
+                // Émettre un événement pour gérer la navigation avec historique
+                window.dispatchEvent(new CustomEvent('navigateWithHistory', { 
+                  detail: { fromSection: 'accueil', toSection: 'contact' }
+                }));
               }}
               className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-6 py-3 rounded-full font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 shadow-lg hover:shadow-yellow-500/25"
             >

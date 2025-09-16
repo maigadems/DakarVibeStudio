@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye } from 'lucide-react';
-import { loadBookingData, addBooking, getBookingStats } from '../utils/bookingStorage';
+import { 
+  createReservation, 
+  getAllReservations, 
+  getBookedSlotsForDate, 
+  getReservationStats,
+  type Reservation 
+} from '../utils/reservationService';
 
 const Calendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
-  const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [bookedSlots, setBookedSlots] = useState<{[key: string]: string[]}>(() => loadBookingData());
+  const [bookedSlots, setBookedSlots] = useState<{[key: string]: string[]}>({});
+  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
+  const [stats, setStats] = useState({
+    totalReservations: 0,
+    totalSlots: 0,
+    totalRevenue: 0,
+    currentMonth: new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  });
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [adminCredentials, setAdminCredentials] = useState({ login: '', password: '' });
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -17,6 +30,42 @@ const Calendar: React.FC = () => {
     message: ''
   });
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Charger les créneaux réservés pour une date
+  const loadBookedSlotsForDate = async (date: string) => {
+    const slots = await getBookedSlotsForDate(date);
+    setBookedSlots(prev => ({
+      ...prev,
+      [date]: slots
+    }));
+  };
+
+  // Charger toutes les réservations (pour l'admin)
+  const loadAllReservations = async () => {
+    const reservations = await getAllReservations();
+    setAllReservations(reservations);
+  };
+
+  // Charger les statistiques
+  const loadStats = async () => {
+    const statsData = await getReservationStats();
+    setStats(statsData);
+  };
+
+  // Charger les données au changement de date
+  React.useEffect(() => {
+    if (selectedDate) {
+      loadBookedSlotsForDate(selectedDate);
+    }
+  }, [selectedDate]);
+
+  // Charger les données initiales
+  React.useEffect(() => {
+    loadStats();
+    if (isAdminAuthenticated) {
+      loadAllReservations();
+    }
+  }, [isAdminAuthenticated]);
 
   const baseTimeSlots = [
     { id: '08-09', time: '08h00 - 09h00' },
@@ -146,8 +195,9 @@ const Calendar: React.FC = () => {
     return selectedSlots.length * 30000;
   };
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setErrorMessage('');
     
     // Vérifications spécifiques avec messages d'erreur personnalisés
@@ -161,12 +211,36 @@ const Calendar: React.FC = () => {
       return;
     }
     
-    // Enregistrer immédiatement la réservation
-    addBooking(selectedDate, selectedSlots);
-    
-    // Mettre à jour l'état local pour refléter la réservation
-    setBookedSlots(loadBookingData());
-    
+    try {
+      // Enregistrer la réservation dans Supabase
+      const reservation = await createReservation({
+        nom: formData.nom,
+        email: formData.email,
+        telephone: formData.telephone,
+        message: formData.message,
+        date_reservation: selectedDate,
+        creneaux: selectedSlots,
+        duree_heures: selectedSlots.length,
+        montant_total: getTotalPrice()
+      });
+
+      if (!reservation) {
+        setErrorMessage('Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Mettre à jour l'état local
+      await loadBookedSlotsForDate(selectedDate);
+      await loadStats();
+      
+    } catch (error) {
+      console.error('Erreur lors de la réservation:', error);
+      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
+      setIsLoading(false);
+      return;
+    }
+
     // Rediriger vers Wave pour le paiement
     const totalAmount = getTotalPrice();
     const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
@@ -221,15 +295,13 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
     });
     setErrorMessage('');
     
+    setIsLoading(false);
     alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
   };
 
   const handleCall = () => {
     window.location.href = 'tel:+221710162323';
   };
-
-  // Obtenir les statistiques pour affichage (optionnel)
-  const stats = getBookingStats();
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,11 +328,6 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
     });
   };
 
-  const getSlotTime = (slotId: string) => {
-    const slot = baseTimeSlots.find(s => s.id === slotId);
-    return slot ? slot.time : slotId;
-  };
-
   return (
     <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
@@ -275,7 +342,7 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
             Choisissez votre date et créneau horaire, puis remplissez le formulaire pour finaliser votre réservation.
           </p>
           <div className="mt-4 text-sm text-gray-400">
-            📊 Ce mois ({stats.currentMonth}) : {stats.totalSlots} créneaux réservés sur {stats.totalDays} jours
+            📊 Ce mois ({stats.currentMonth}) : {stats.totalReservations} réservations • {stats.totalSlots} créneaux • {stats.totalRevenue.toLocaleString()} FCFA
           </div>
           
           {/* Bouton Admin discret */}
@@ -499,10 +566,11 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
 
               <button
                 type="submit"
-                className="w-full font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white"
+                disabled={isLoading}
+                className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 ${isLoading ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'} text-white`}
               >
                 <CreditCard className="w-5 h-5" />
-                <span>Payer par Wave</span>
+                <span>{isLoading ? 'Enregistrement...' : 'Payer par Wave'}</span>
               </button>
 
               <button
@@ -576,16 +644,16 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                   <h4 className="text-lg font-semibold text-white mb-2">Statistiques du mois</h4>
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-orange-400">{stats.totalSlots}</div>
+                      <div className="text-2xl font-bold text-orange-400">{stats.totalReservations}</div>
+                      <div className="text-sm text-gray-400">Réservations</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-red-400">{stats.totalSlots}</div>
                       <div className="text-sm text-gray-400">Créneaux réservés</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-red-400">{stats.totalDays}</div>
-                      <div className="text-sm text-gray-400">Jours avec réservations</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-yellow-400">{(stats.totalSlots * 30000).toLocaleString()}</div>
-                      <div className="text-sm text-gray-400">FCFA (estimation)</div>
+                      <div className="text-2xl font-bold text-yellow-400">{stats.totalRevenue.toLocaleString()}</div>
+                      <div className="text-sm text-gray-400">FCFA</div>
                     </div>
                   </div>
                 </div>
@@ -597,40 +665,72 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                     Toutes les réservations
                   </h4>
                   
-                  {Object.keys(bookedSlots).length === 0 ? (
+                  {allReservations.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
-                      Aucune réservation pour ce mois
+                      Aucune réservation trouvée
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {Object.entries(bookedSlots)
-                        .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
-                        .map(([date, slots]) => (
-                        <div key={date} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                      {allReservations.map((reservation) => (
+                        <div key={reservation.id} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h5 className="font-semibold text-white">{formatDateForDisplay(date)}</h5>
-                              <p className="text-sm text-gray-400">{date}</p>
+                              <h5 className="font-semibold text-white">{reservation.nom}</h5>
+                              <p className="text-sm text-gray-400">{reservation.email}</p>
+                              <p className="text-sm text-gray-400">{reservation.telephone}</p>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm text-orange-400 font-semibold">
-                                {slots.length} créneau{slots.length > 1 ? 'x' : ''}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {(slots.length * 30000).toLocaleString()} FCFA
+                              <div className={`text-xs px-2 py-1 rounded-full ${
+                                reservation.statut === 'confirmee' ? 'bg-green-500/20 text-green-400' :
+                                reservation.statut === 'annulee' ? 'bg-red-500/20 text-red-400' :
+                                'bg-yellow-500/20 text-yellow-400'
+                              }`}>
+                                {reservation.statut === 'confirmee' ? 'Confirmée' :
+                                 reservation.statut === 'annulee' ? 'Annulée' : 'En attente'}
                               </div>
                             </div>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {slots.map((slotId) => (
-                              <span
-                                key={slotId}
-                                className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm border border-orange-500/30"
-                              >
-                                {getSlotTime(slotId)}
-                              </span>
-                            ))}
+                          
+                          <div className="mb-3">
+                            <div className="text-sm text-white mb-1">
+                              📅 {formatDateForDisplay(reservation.date_reservation)}
+                            </div>
+                            <div className="text-sm text-gray-300 mb-1">
+                              ⏰ {reservation.duree_heures} heure{reservation.duree_heures > 1 ? 's' : ''}
+                            </div>
+                            <div className="text-sm text-orange-400 font-semibold">
+                              💰 {reservation.montant_total.toLocaleString()} FCFA
+                            </div>
+                            {reservation.message && (
+                              <div className="text-xs text-gray-400 mt-2 italic">
+                                💬 {reservation.message}
+                              </div>
+                            )}
                           </div>
+                          
+                          <div className="flex flex-wrap gap-2">
+                            {reservation.creneaux.map((slotId) => {
+                              const slot = baseTimeSlots.find(s => s.id === slotId);
+                              return (
+                                <span
+                                  key={slotId}
+                                  className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs border border-orange-500/30"
+                                >
+                                  {slot ? slot.time : slotId}
+                                </span>
+                              );
+                            })}
+                          
+                          <div className="text-xs text-gray-500 mt-2">
+                            Créé le {new Date(reservation.created_at).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
                         </div>
                       ))}
                     </div>
@@ -640,7 +740,7 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                 {/* Actions admin */}
                 <div className="border-t border-gray-600 pt-4">
                   <div className="text-xs text-gray-400 text-center">
-                    💡 Les réservations se réinitialisent automatiquement chaque 1er du mois
+                    💡 Toutes les réservations sont enregistrées dans Supabase
                   </div>
                 </div>
               </div>
