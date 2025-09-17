@@ -18,7 +18,7 @@ const Contact = () => {
     const whatsappMessage = `Nouveau message depuis le site Westaf Studio:
 
 Nom: ${formData.name}
-Email: ${formData.email}
+Email: ${formData.email} (à répondre sur contact@westafrecords.com)
 Sujet: ${formData.subject}
 
 Message:
@@ -38,7 +38,7 @@ ${formData.message}`;
         message: ''
       });
       setIsSubmitting(false);
-      alert('Message envoyé ! Vous allez être redirigé vers WhatsApp.');
+      alert('Message envoyé ! Vous allez être redirigé vers WhatsApp. Une réponse vous sera envoyée sur contact@westafrecords.com');
     }, 1000);
   };
 
@@ -79,7 +79,12 @@ ${formData.message}`;
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Email</h3>
-                <p className="text-gray-300">booking.westafrecords@gmail.com</p>
+                <div className="text-gray-300 space-y-1">
+                  <p>contact@westafrecords.com</p>
+                  <p className="text-sm text-gray-400">Contact principal</p>
+                  <p className="text-orange-400">prod@westafrecords.com</p>
+                  <p className="text-sm text-gray-400">Envoi de fichiers audio</p>
+                </div>
                 <p className="text-sm text-gray-400">Réponse sous 24h</p>
               </div>
             </div>

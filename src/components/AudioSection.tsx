@@ -197,6 +197,8 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
               <p className="text-gray-300 mb-6 text-center">
                 Enregistrement professionnel de voix off pour vos publicités, documentaires, 
                 présentations et contenus multimédias.
+                <br />
+                <span className="text-orange-400 text-sm">Envoyez vos fichiers à prod@westafrecords.com</span>
               </p>
               <ul className="space-y-2 text-sm text-gray-400 mb-6">
                 <li>• Voix masculine et féminine disponibles</li>
@@ -235,6 +237,8 @@ const AudioSection: React.FC<AudioSectionProps> = ({ setCurrentSection }) => {
               <p className="text-gray-300 mb-6 text-center">
                 Création de jingles personnalisés pour radios, podcasts, chaînes YouTube 
                 et événements d'entreprise.
+                <br />
+                <span className="text-orange-400 text-sm">Envoyez vos références à prod@westafrecords.com</span>
               </p>
               <ul className="space-y-2 text-sm text-gray-400 mb-6">
                 <li>• Composition originale sur mesure</li>
