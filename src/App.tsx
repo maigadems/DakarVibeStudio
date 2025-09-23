@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import MaintenancePage from './components/MaintenancePage';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -9,6 +10,14 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 
 function App() {
+  // Variable pour activer/désactiver le mode maintenance
+  const isMaintenanceMode = true; // Changer à false pour désactiver la maintenance
+
+  // Si le mode maintenance est activé, afficher uniquement la page de maintenance
+  if (isMaintenanceMode) {
+    return <MaintenancePage />;
+  }
+
   // Initialiser la section basée sur l'URL ou 'accueil' par défaut
   const [currentSection, setCurrentSection] = useState(() => {
     const hash = window.location.hash.slice(1);
