@@ -341,9 +341,6 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Choisissez votre date et créneau horaire, puis remplissez le formulaire pour finaliser votre réservation.
           </p>
-          <div className="mt-4 text-sm text-gray-400">
-            📊 Ce mois ({stats.currentMonth}) : {stats.totalReservations} réservations • {stats.totalSlots} créneaux • {stats.totalRevenue.toLocaleString()} FCFA
-          </div>
           
           {/* Bouton Admin discret */}
           <button
