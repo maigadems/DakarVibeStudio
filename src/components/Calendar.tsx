@@ -200,18 +200,20 @@ const Calendar: React.FC = () => {
     setIsLoading(true);
     setErrorMessage('');
     
-    // Vérifications spécifiques avec messages d'erreur personnalisés
-    if (!selectedDate || selectedSlots.length === 0) {
-      setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
-      return;
-    }
-    
-    if (!formData.nom || !formData.email || !formData.telephone) {
-      setErrorMessage('Veuillez remplir tous les champs obligatoires du formulaire.');
-      return;
-    }
-    
     try {
+      // Vérifications spécifiques avec messages d'erreur personnalisés
+      if (!selectedDate || selectedSlots.length === 0) {
+        setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!formData.nom || !formData.email || !formData.telephone) {
+        setErrorMessage('Veuillez remplir tous les champs obligatoires du formulaire.');
+        setIsLoading(false);
+        return;
+      }
+
       // Enregistrer la réservation dans Supabase
       const reservation = await createReservation({
         nom: formData.nom,
@@ -234,38 +236,28 @@ const Calendar: React.FC = () => {
       await loadBookedSlotsForDate(selectedDate);
       await loadStats();
       
-    } catch (error) {
-      console.error('Erreur lors de la réservation:', error);
-      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
-      setIsLoading(false);
-      return;
-    }
-
-    // Rediriger vers Wave pour le paiement
-    const totalAmount = getTotalPrice();
-    const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
-    
-    // Ouvrir Wave dans un nouvel onglet
-    window.open(wavePaymentUrl, '_blank');
-    
-    // Créer le message WhatsApp avec les détails de la réservation
-    const selectedSlotsText = selectedSlots.length === 1 
-      ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
-      : (() => {
-          const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
-          const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
-          const endTime = lastSlot?.time.split(' - ')[1];
-          return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
-        })();
-        
-    const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    
-    const whatsappMessage = `Bonjour, j'ai effectué le paiement pour ma réservation au Westaf Studio.
+      // Rediriger vers Wave pour le paiement
+      const totalAmount = getTotalPrice();
+      const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
+      
+      // Créer le message WhatsApp avec les détails de la réservation
+      const selectedSlotsText = selectedSlots.length === 1 
+        ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
+        : (() => {
+            const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
+            const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
+            const endTime = lastSlot?.time.split(' - ')[1];
+            return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
+          })();
+          
+      const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      const whatsappMessage = `Bonjour, j'ai effectué le paiement pour ma réservation au Westaf Studio.
 
 Nom complet: ${formData.nom}
 Email: ${formData.email}
@@ -277,26 +269,36 @@ Montant payé: ${totalAmount.toLocaleString()} FCFA via Wave
 
 Message: ${formData.message || 'Aucun message supplémentaire'}`;
 
-    const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
-    
-    // Ouvrir WhatsApp dans un nouvel onglet après un court délai
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank');
-    }, 1000);
-    
-    // Réinitialiser le formulaire
-    setSelectedDate('');
-    setSelectedSlots([]);
-    setFormData({
-      nom: '',
-      email: '',
-      telephone: '',
-      message: ''
-    });
-    setErrorMessage('');
-    
-    setIsLoading(false);
-    alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
+      const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
+      
+      // Réinitialiser le formulaire
+      setSelectedDate('');
+      setSelectedSlots([]);
+      setFormData({
+        nom: '',
+        email: '',
+        telephone: '',
+        message: ''
+      });
+      setErrorMessage('');
+      setIsLoading(false);
+      
+      // Afficher le message de confirmation
+      alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
+      
+      // Redirection immédiate vers Wave
+      window.location.href = wavePaymentUrl;
+      
+      // Ouvrir WhatsApp après un délai (au cas où la redirection échoue)
+      setTimeout(() => {
+        window.open(whatsappUrl, '_blank');
+      }, 2000);
+        
+    } catch (error) {
+      console.error('Erreur lors de la réservation:', error);
+      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
+      setIsLoading(false);
+    }
   };
 
   const handleCall = () => {
