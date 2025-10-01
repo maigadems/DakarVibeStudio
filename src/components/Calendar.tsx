@@ -283,16 +283,13 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
       setErrorMessage('');
       setIsLoading(false);
       
-      // Afficher le message de confirmation
-      alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
-      
       // Redirection immédiate vers Wave
       window.location.href = wavePaymentUrl;
       
-      // Ouvrir WhatsApp après un délai (au cas où la redirection échoue)
+      // Ouvrir WhatsApp après un délai pour confirmation
       setTimeout(() => {
         window.open(whatsappUrl, '_blank');
-      }, 2000);
+      }, 3000);
         
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);
