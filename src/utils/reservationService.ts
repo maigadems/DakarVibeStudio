@@ -166,3 +166,46 @@ export const updateReservationStatus = async (
     return false;
   }
 };
+
+// Supprimer une réservation
+export const deleteReservation = async (id: string): Promise<boolean> => {
+  try {
+    console.log('🗑️ Tentative de suppression de la réservation ID:', id);
+    
+    // Vérifier d'abord que la réservation existe
+    const { data: existingReservation, error: fetchError } = await supabase
+      .from('reservations')
+      .select('id, nom')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('❌ Erreur lors de la vérification de la réservation:', fetchError);
+      return false;
+    }
+
+    if (!existingReservation) {
+      console.error('❌ Réservation non trouvée:', id);
+      return false;
+    }
+
+    console.log('✅ Réservation trouvée:', existingReservation.nom);
+    
+    const { data, error } = await supabase
+      .from('reservations')
+      .delete()
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error('❌ Erreur lors de la suppression:', error.message, error.details, error.hint);
+      return false;
+    }
+
+    console.log('✅ Réservation supprimée avec succès. Données supprimées:', data);
+    return true;
+  } catch (error) {
+    console.error('❌ Erreur générale lors de la suppression:', error);
+    return false;
+  }
+};

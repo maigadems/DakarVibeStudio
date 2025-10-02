@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye, Trash2 } from 'lucide-react';
 import { 
   createReservation, 
   getAllReservations, 
   getBookedSlotsForDate, 
   getReservationStats,
+  deleteReservation,
   type Reservation 
 } from '../utils/reservationService';
 
@@ -23,6 +24,11 @@ const Calendar: React.FC = () => {
   const [adminCredentials, setAdminCredentials] = useState({ login: '', password: '' });
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    isOpen: false,
+    reservationId: '',
+    reservationName: ''
+  });
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -316,6 +322,59 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
     setShowAdminModal(false);
     setIsAdminAuthenticated(false);
     setAdminCredentials({ login: '', password: '' });
+  };
+
+  const handleDeleteClick = (reservation: Reservation) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      reservationId: reservation.id,
+      reservationName: reservation.nom
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    console.log('🗑️ Confirmation de suppression pour:', deleteConfirmation.reservationId);
+    
+    try {
+      setIsLoading(true);
+      
+      const success = await deleteReservation(deleteConfirmation.reservationId);
+      if (success) {
+        console.log('✅ Suppression réussie, rechargement des données...');
+        // Recharger les données
+        await loadAllReservations();
+        await loadStats();
+        alert('Réservation supprimée avec succès !');
+        // Recharger les créneaux réservés pour la date sélectionnée si elle existe
+        if (selectedDate) {
+          await loadBookedSlotsForDate(selectedDate);
+        }
+        console.log('✅ Données rechargées');
+      } else {
+        console.error('❌ Échec de la suppression');
+        alert('Erreur lors de la suppression de la réservation');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression de la réservation');
+    } finally {
+      setIsLoading(false);
+    }
+    
+    // Fermer la modal de confirmation
+    setDeleteConfirmation({
+      isOpen: false,
+      reservationId: '',
+      reservationName: ''
+    });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmation({
+      isOpen: false,
+      reservationId: '',
+      reservationName: ''
+    });
   };
 
   const formatDateForDisplay = (dateString: string) => {
@@ -676,6 +735,15 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                               <p className="text-sm text-gray-400">{reservation.telephone}</p>
                             </div>
                             <div className="text-right">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <button
+                                  onClick={() => handleDeleteClick(reservation)}
+                                  className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                                  title="Supprimer la réservation"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                               <div className={`text-xs px-2 py-1 rounded-full ${
                                 reservation.statut === 'confirmee' ? 'bg-green-500/20 text-green-400' :
                                 reservation.statut === 'annulee' ? 'bg-red-500/20 text-red-400' :
@@ -741,6 +809,44 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {deleteConfirmation.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-red-500/20">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Confirmer la suppression</h3>
+              <p className="text-gray-300">
+                Êtes-vous sûr de vouloir supprimer la réservation de{' '}
+                <span className="font-semibold text-orange-400">{deleteConfirmation.reservationName}</span> ?
+              </p>
+              <p className="text-sm text-red-400 mt-2">
+                ⚠️ Cette action est irréversible
+              </p>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={handleDeleteCancel}
+                className={`flex-1 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className={`flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Suppression...' : 'Supprimer'}
+              </button>
+            </div>
           </div>
         </div>
       )}
