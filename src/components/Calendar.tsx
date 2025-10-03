@@ -245,7 +245,7 @@ const Calendar: React.FC = () => {
     const totalAmount = getTotalPrice();
     const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
     
-    // Ouvrir Wave dans un nouvel onglet
+    alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement');
     window.open(wavePaymentUrl, '_blank');
     
     // Créer le message WhatsApp avec les détails de la réservation
@@ -280,9 +280,9 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
     const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
     
     // Ouvrir WhatsApp dans un nouvel onglet après un court délai
-    setTimeout(() => {
-      window.open(whatsappUrl, '_blank');
-    }, 1000);
+    alert('Vous allez être redirigé vers WhatsApp pour confirmation.');
+    window.open(whatsappUrl, '_blank');
+    
     
     // Réinitialiser le formulaire
     setSelectedDate('');
