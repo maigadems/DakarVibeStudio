@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye } from 'lucide-react';
 import { 
   createReservation, 
   getAllReservations, 
   getBookedSlotsForDate, 
   getReservationStats,
-  deleteReservation,
   type Reservation 
 } from '../utils/reservationService';
 
@@ -24,11 +23,6 @@ const Calendar: React.FC = () => {
   const [adminCredentials, setAdminCredentials] = useState({ login: '', password: '' });
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState({
-    isOpen: false,
-    reservationId: '',
-    reservationName: ''
-  });
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -206,20 +200,18 @@ const Calendar: React.FC = () => {
     setIsLoading(true);
     setErrorMessage('');
     
+    // Vérifications spécifiques avec messages d'erreur personnalisés
+    if (!selectedDate || selectedSlots.length === 0) {
+      setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
+      return;
+    }
+    
+    if (!formData.nom || !formData.email || !formData.telephone) {
+      setErrorMessage('Veuillez remplir tous les champs obligatoires du formulaire.');
+      return;
+    }
+    
     try {
-      // Vérifications spécifiques avec messages d'erreur personnalisés
-      if (!selectedDate || selectedSlots.length === 0) {
-        setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
-        setIsLoading(false);
-        return;
-      }
-      
-      if (!formData.nom || !formData.email || !formData.telephone) {
-        setErrorMessage('Veuillez remplir tous les champs obligatoires du formulaire.');
-        setIsLoading(false);
-        return;
-      }
-
       // Enregistrer la réservation dans Supabase
       const reservation = await createReservation({
         nom: formData.nom,
@@ -242,30 +234,38 @@ const Calendar: React.FC = () => {
       await loadBookedSlotsForDate(selectedDate);
       await loadStats();
       
-      // Rediriger vers Wave pour le paiement
-      const totalAmount = getTotalPrice();
-      
-      // URL Wave directe vers la page de paiement
-      const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/`;
-      
-      // Créer le message WhatsApp avec les détails de la réservation
-      const selectedSlotsText = selectedSlots.length === 1 
-        ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
-        : (() => {
-            const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
-            const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
-            const endTime = lastSlot?.time.split(' - ')[1];
-            return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
-          })();
-          
-      const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
-      const whatsappMessage = `Bonjour, j'ai effectué le paiement pour ma réservation au Westaf Studio.
+    } catch (error) {
+      console.error('Erreur lors de la réservation:', error);
+      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Rediriger vers Wave pour le paiement
+    const totalAmount = getTotalPrice();
+    const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
+    
+    // Ouvrir Wave dans un nouvel onglet
+    window.open(wavePaymentUrl, '_blank');
+    
+    // Créer le message WhatsApp avec les détails de la réservation
+    const selectedSlotsText = selectedSlots.length === 1 
+      ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
+      : (() => {
+          const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
+          const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
+          const endTime = lastSlot?.time.split(' - ')[1];
+          return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
+        })();
+        
+    const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    const whatsappMessage = `Bonjour, j'ai effectué le paiement pour ma réservation au Westaf Studio.
 
 Nom complet: ${formData.nom}
 Email: ${formData.email}
@@ -277,28 +277,26 @@ Montant payé: ${totalAmount.toLocaleString()} FCFA via Wave
 
 Message: ${formData.message || 'Aucun message supplémentaire'}`;
 
-      const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
-      
-      // Réinitialiser le formulaire
-      setSelectedDate('');
-      setSelectedSlots([]);
-      setFormData({
-        nom: '',
-        email: '',
-        telephone: '',
-        message: ''
-      });
-      setErrorMessage('');
-      setIsLoading(false);
-      
-      // Redirection simple vers Wave
-      window.location.href = 'https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/';
-        
-    } catch (error) {
-      console.error('Erreur lors de la réservation:', error);
-      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
-      setIsLoading(false);
-    }
+    const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
+    
+    // Ouvrir WhatsApp dans un nouvel onglet après un court délai
+    setTimeout(() => {
+      window.open(whatsappUrl, '_blank');
+    }, 1000);
+    
+    // Réinitialiser le formulaire
+    setSelectedDate('');
+    setSelectedSlots([]);
+    setFormData({
+      nom: '',
+      email: '',
+      telephone: '',
+      message: ''
+    });
+    setErrorMessage('');
+    
+    setIsLoading(false);
+    alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement, puis vers WhatsApp pour confirmation.');
   };
 
   const handleCall = () => {
@@ -319,59 +317,6 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
     setShowAdminModal(false);
     setIsAdminAuthenticated(false);
     setAdminCredentials({ login: '', password: '' });
-  };
-
-  const handleDeleteClick = (reservation: Reservation) => {
-    setDeleteConfirmation({
-      isOpen: true,
-      reservationId: reservation.id,
-      reservationName: reservation.nom
-    });
-  };
-
-  const handleDeleteConfirm = async () => {
-    console.log('🗑️ Confirmation de suppression pour:', deleteConfirmation.reservationId);
-    
-    try {
-      setIsLoading(true);
-      
-      const success = await deleteReservation(deleteConfirmation.reservationId);
-      if (success) {
-        console.log('✅ Suppression réussie, rechargement des données...');
-        // Recharger les données
-        await loadAllReservations();
-        await loadStats();
-        alert('Réservation supprimée avec succès !');
-        // Recharger les créneaux réservés pour la date sélectionnée si elle existe
-        if (selectedDate) {
-          await loadBookedSlotsForDate(selectedDate);
-        }
-        console.log('✅ Données rechargées');
-      } else {
-        console.error('❌ Échec de la suppression');
-        alert('Erreur lors de la suppression de la réservation');
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de la réservation');
-    } finally {
-      setIsLoading(false);
-    }
-    
-    // Fermer la modal de confirmation
-    setDeleteConfirmation({
-      isOpen: false,
-      reservationId: '',
-      reservationName: ''
-    });
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteConfirmation({
-      isOpen: false,
-      reservationId: '',
-      reservationName: ''
-    });
   };
 
   const formatDateForDisplay = (dateString: string) => {
@@ -732,15 +677,6 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                               <p className="text-sm text-gray-400">{reservation.telephone}</p>
                             </div>
                             <div className="text-right">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <button
-                                  onClick={() => handleDeleteClick(reservation)}
-                                  className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
-                                  title="Supprimer la réservation"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
                               <div className={`text-xs px-2 py-1 rounded-full ${
                                 reservation.statut === 'confirmee' ? 'bg-green-500/20 text-green-400' :
                                 reservation.statut === 'annulee' ? 'bg-red-500/20 text-red-400' :
@@ -806,44 +742,6 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmation de suppression */}
-      {deleteConfirmation.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-red-500/20">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Confirmer la suppression</h3>
-              <p className="text-gray-300">
-                Êtes-vous sûr de vouloir supprimer la réservation de{' '}
-                <span className="font-semibold text-orange-400">{deleteConfirmation.reservationName}</span> ?
-              </p>
-              <p className="text-sm text-red-400 mt-2">
-                ⚠️ Cette action est irréversible
-              </p>
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                onClick={handleDeleteCancel}
-                className={`flex-1 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isLoading}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className={`flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Suppression...' : 'Supprimer'}
-              </button>
-            </div>
           </div>
         </div>
       )}
