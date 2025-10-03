@@ -244,7 +244,9 @@ const Calendar: React.FC = () => {
       
       // Rediriger vers Wave pour le paiement
       const totalAmount = getTotalPrice();
-      const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
+      
+      // URL Wave directe vers la page de paiement
+      const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/`;
       
       // Créer le message WhatsApp avec les détails de la réservation
       const selectedSlotsText = selectedSlots.length === 1 
@@ -289,13 +291,8 @@ Message: ${formData.message || 'Aucun message supplémentaire'}`;
       setErrorMessage('');
       setIsLoading(false);
       
-      // Redirection immédiate vers Wave
-      window.location.href = wavePaymentUrl;
-      
-      // Ouvrir WhatsApp après un délai pour confirmation
-      setTimeout(() => {
-        window.open(whatsappUrl, '_blank');
-      }, 3000);
+      // Redirection simple vers Wave
+      window.location.href = 'https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/';
         
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);
