@@ -246,7 +246,7 @@ const Calendar: React.FC = () => {
     const wavePaymentUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${totalAmount}`;
     
     alert('Réservation confirmée ! Vous allez être redirigé vers Wave pour le paiement');
-    window.location.href = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/`;
+    window.open("https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/", "_blank");
     
     // Créer le message WhatsApp avec les détails de la réservation
     const selectedSlotsText = selectedSlots.length === 1 
