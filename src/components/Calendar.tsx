@@ -265,6 +265,14 @@ const Calendar: React.FC = () => {
       });
       setIsLoading(false);
       
+      // Scroll vers la section de confirmation
+      setTimeout(() => {
+        const confirmationSection = document.getElementById('confirmation-section');
+        if (confirmationSection) {
+          confirmationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+      
     } catch (error) {
       console.error('Erreur lors de la réservation:', error);
       setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
@@ -272,7 +280,27 @@ const Calendar: React.FC = () => {
     }
   };
 
-  
+  const handleWavePayment = () => {
+    if (!confirmedReservation) return;
+    
+    // Construire l'URL Wave avec les paramètres
+    const waveUrl = `https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/?amount=${confirmedReservation.montant_total}&currency=XOF&reference=${confirmedReservation.id}&description=Reservation Studio - ${confirmedReservation.nom}`;
+    
+    // Détecter si on est sur mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // Sur mobile, ouvrir dans un nouvel onglet pour éviter l'App Store
+      const newWindow = window.open(waveUrl, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        // Si le popup est bloqué, utiliser location.href
+        window.location.href = waveUrl;
+      }
+    } else {
+      // Sur desktop, redirection normale
+      window.location.href = waveUrl;
+    }
+  };
 
   const handleNewReservation = () => {
     setReservationConfirmed(false);
@@ -623,7 +651,7 @@ const Calendar: React.FC = () => {
               </>
             ) : (
               /* Confirmation de réservation */
-              <div className="space-y-6">
+              <div id="confirmation-section" className="space-y-6">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -660,7 +688,7 @@ const Calendar: React.FC = () => {
                   <CreditCard className="w-5 h-5" />
                   <span>Payer par Wave</span>
                 </button>
-
+                
                 {/* Bouton pour nouvelle réservation */}
                 <button
                   onClick={handleNewReservation}
