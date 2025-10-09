@@ -63,10 +63,53 @@ const About = () => {
               <Music className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-white mb-4">Équipement Pro</h3>
-            <p className="text-gray-300">
-              Matériel haut de gamme : micros Neumann, préamplis SSL, monitoring Genelec 
-              pour une qualité sonore exceptionnelle.
-            </p>
+            <div className="text-gray-300 space-y-4">
+              <div>
+                <h4 className="text-orange-400 font-semibold mb-2">Microphones</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• TLM 103</li>
+                  <li>• AKG 414</li>
+                  <li>• Série de SM58</li>
+                  <li>• Série de SM57</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-orange-400 font-semibold mb-2">Préamplis</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• Neve 1073spx</li>
+                  <li>• Universal Audio</li>
+                  <li>• X8</li>
+                  <li>• Apollo Twin</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-orange-400 font-semibold mb-2">Monitoring</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• Monitor Adam T7v</li>
+                  <li>• Monitor Avantone</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-orange-400 font-semibold mb-2">Instruments</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• Guitare basse</li>
+                  <li>• Guitare électrique</li>
+                  <li>• Guitare nylon</li>
+                  <li>• Claviers (DX7, Korg Kross)</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-orange-400 font-semibold mb-2">Casques</h4>
+                <ul className="space-y-1 text-sm">
+                  <li>• Focal MG Pro</li>
+                  <li>• Focal Celeste</li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div className="bg-gradient-to-b from-red-500/10 to-transparent p-8 rounded-2xl border border-red-500/20 hover:border-red-500/40 transition-all duration-300">
