@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PayButton from "./PayButton";
 import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye, Trash2 } from 'lucide-react';
 import { 
   createReservation, 
@@ -279,6 +280,9 @@ const Calendar: React.FC = () => {
       setIsLoading(false);
     }
   };
+  const montant = confirmedReservation?.montant_total ?? 0;
+  const namev = confirmedReservation?.nom ?? '';
+  const datev = confirmedReservation?.selectedDateFormatted ?? '';
 
   const handleWavePayment = () => {
     if (!confirmedReservation) return;
@@ -681,14 +685,17 @@ const Calendar: React.FC = () => {
                 </div>
 
                 {/* Bouton de paiement Wave */}
-                <button
-                  onClick={() =>window.location.href = "https://pay.wave.com/m/M_sn_zCHJuLFd2WBm/c/sn/"}
-                  className="w-full font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 text-white"
-                >
-                  <CreditCard className="w-5 h-5" />
-                  <span>Payer par Wave</span>
-                </button>
-                
+                {confirmedReservation && (
+        <div className="mt-6">
+          <PayButton
+            amount={montant}
+            description="Paiement de la réservation"
+            name={namev}
+            date={datev}
+          />
+        </div>
+      )}
+
                 {/* Bouton pour nouvelle réservation */}
                 <button
                   onClick={handleNewReservation}
