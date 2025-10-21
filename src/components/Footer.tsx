@@ -1,6 +1,27 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Instagram, Facebook, Twitter, Camera, Ghost } from 'lucide-react';
 
+interface LocalisationProps {
+  adresse: string;
+}
+
+const Localisation: React.FC<LocalisationProps> = ({ adresse }) => {
+  const url = `https://www.google.com/maps?q=14.7370071411133,-17.49489402771`;
+  return (
+    <div className="flex items-center space-x-3">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center space-x-2 hover:text-yellow-400 transition"
+      >
+        <MapPin className="w-4 h-4 text-yellow-400" />
+        <span className="text-gray-400 text-sm">{adresse}</span>
+      </a>
+    </div>
+  );
+};
+
 const Footer: React.FC = () => {
   const socialLinks = [
     { icon: Instagram, name: 'Instagram', url: 'https://www.instagram.com/westafrecords?igsh=MTFuNWEyNG5mYWpxeQ%3D%3D&utm_source=qr' },
@@ -117,10 +138,7 @@ const Footer: React.FC = () => {
                   <div className="text-orange-400">prod@westafrecords.com</div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-4 h-4 text-yellow-400" />
-                <span className="text-gray-400 text-sm">Almadies, Dakar</span>
-              </div>
+              <Localisation adresse="Almadies, Dakar" />
             </div>
           </div>
         </div>

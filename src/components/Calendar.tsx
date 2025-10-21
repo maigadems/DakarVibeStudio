@@ -818,7 +818,7 @@ const Calendar: React.FC = () => {
                                 'bg-yellow-500/20 text-yellow-400'
                               }`}>
                                 {reservation.statut === 'confirmee' ? 'Confirmée' :
-                                 reservation.statut === 'annulee' ? 'Annulée' : 'En attente'}
+                                 reservation.statut === 'annulee' ? 'Annulée' : 'Confirmée'}
                               </div>
                             </div>
                           </div>
