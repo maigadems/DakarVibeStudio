@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check, Star, Zap, Clock, Headphones, Volume2 } from 'lucide-react';
+import PayButton from "./PayButton";
 
 interface PricingProps {
   setCurrentSection: (section: string) => void;
@@ -60,7 +61,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
   const additionalServices = [
     {
       name: "Mixage de Titre",
-      price: "150,000",
+      price: "150000",
       description: "Mixage professionnel de votre titre",
       features: [
         "Mixage professionnel",
@@ -74,7 +75,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
     },
     {
       name: "Mastering",
-      price: "70,000",
+      price: "70000",
       description: "Finalisation de votre titre",
       features: [
         "Mastering professionnel",
@@ -87,6 +88,7 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
       icon: Volume2
     }
   ];
+
 
   return (
     <section id="pricing" className="py-20 bg-gray-900 text-white">
@@ -216,20 +218,10 @@ const Pricing: React.FC<PricingProps> = ({ setCurrentSection }) => {
                     ))}
                   </ul>
 
-                  <button
-                    onClick={() => {
-                      setCurrentSection('contact');
-                      setTimeout(() => {
-                        const contactForm = document.getElementById('contact-form');
-                        if (contactForm) {
-                          contactForm.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-                        }
-                      }, 100);
-                    }}
-                    className="w-full py-3 rounded-xl font-semibold bg-gray-700 text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-red-500 transition-all duration-300"
-                  >
-                    Demander un Devis
-                  </button>
+                  <PayButton
+                    amount={service.price}
+                    description="Paiement de la réservation"
+                  />
                 </div>
               );
             })}
