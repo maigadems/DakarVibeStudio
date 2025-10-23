@@ -17,10 +17,12 @@ export interface Reservation {
   telephone: string;
   message: string;
   date_reservation: string;
-  creneaux: string[];
-  duree_heures: number;
+  creneaux: string[] | null;
+  duree_heures: number | null;
   montant_total: number;
   statut: 'en_attente' | 'confirmee' | 'annulee';
+  type_service: 'horaire' | 'mixage' | 'mastering';
+  nombre_titres: number | null;
   created_at: string;
   updated_at: string;
 }

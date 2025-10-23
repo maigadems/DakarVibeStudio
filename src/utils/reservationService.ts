@@ -1,4 +1,7 @@
-import { supabase, type Reservation } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import type { Reservation } from '../lib/supabase';
+
+export type { Reservation };
 
 // Créer une nouvelle réservation
 export const createReservation = async (reservationData: {
@@ -7,9 +10,11 @@ export const createReservation = async (reservationData: {
   telephone: string;
   message: string;
   date_reservation: string;
-  creneaux: string[];
-  duree_heures: number;
+  creneaux?: string[] | null;
+  duree_heures?: number | null;
   montant_total: number;
+  type_service: 'horaire' | 'mixage' | 'mastering';
+  nombre_titres?: number | null;
 }): Promise<Reservation | null> => {
   try {
     const { data, error } = await supabase
@@ -78,7 +83,7 @@ export const getBookedSlotsForDate = async (date: string): Promise<string[]> => 
     const bookedSlots: string[] = [];
     
     reservations.forEach(reservation => {
-      if (reservation.statut !== 'annulee') {
+      if (reservation.statut !== 'annulee' && reservation.type_service === 'horaire' && reservation.creneaux) {
         bookedSlots.push(...reservation.creneaux);
       }
     });
@@ -121,8 +126,8 @@ export const getReservationStats = async (): Promise<{
 
     const reservations = data || [];
     const totalReservations = reservations.length;
-    const totalSlots = reservations.reduce((sum, res) => sum + res.duree_heures, 0);
-    const totalRevenue = reservations.reduce((sum, res) => sum + res.montant_total, 0);
+    const totalSlots = reservations.reduce((sum: number, res: Reservation) => sum + (res.duree_heures || 0), 0);
+    const totalRevenue = reservations.reduce((sum: number, res: Reservation) => sum + res.montant_total, 0);
 
     return {
       totalReservations,

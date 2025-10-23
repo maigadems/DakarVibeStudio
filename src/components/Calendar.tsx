@@ -11,6 +11,8 @@ import {
 } from '../utils/reservationService';
 
 const Calendar: React.FC = () => {
+  const [serviceType, setServiceType] = useState<'horaire' | 'mixage' | 'mastering'>('horaire');
+  const [nombreTitres, setNombreTitres] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<{[key: string]: string[]}>({});
@@ -201,7 +203,14 @@ const Calendar: React.FC = () => {
   };
 
   const getTotalPrice = () => {
-    return selectedSlots.length * 30000;
+    if (serviceType === 'horaire') {
+      return selectedSlots.length * 30000;
+    } else if (serviceType === 'mixage') {
+      return nombreTitres * 150000;
+    } else if (serviceType === 'mastering') {
+      return nombreTitres * 70000;
+    }
+    return 0;
   };
 
   const handleConfirmReservation = async (e: React.FormEvent) => {
@@ -211,10 +220,18 @@ const Calendar: React.FC = () => {
     
     try {
       // Vérifications spécifiques avec messages d'erreur personnalisés
-      if (!selectedDate || selectedSlots.length === 0) {
-        setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
-        setIsLoading(false);
-        return;
+      if (serviceType === 'horaire') {
+        if (!selectedDate || selectedSlots.length === 0) {
+          setErrorMessage('Veuillez sélectionner un horaire au niveau du calendrier.');
+          setIsLoading(false);
+          return;
+        }
+      } else {
+        if (nombreTitres < 1) {
+          setErrorMessage('Veuillez sélectionner au moins 1 titre.');
+          setIsLoading(false);
+          return;
+        }
       }
       
       if (!formData.nom || !formData.email || !formData.telephone) {
@@ -224,16 +241,27 @@ const Calendar: React.FC = () => {
       }
 
       // Enregistrer la réservation dans Supabase
-      const reservation = await createReservation({
+      const reservationData: any = {
         nom: formData.nom,
         email: formData.email,
         telephone: formData.telephone,
         message: formData.message,
-        date_reservation: selectedDate,
-        creneaux: selectedSlots,
-        duree_heures: selectedSlots.length,
-        montant_total: getTotalPrice()
-      });
+        date_reservation: serviceType === 'horaire' ? selectedDate : new Date().toISOString().split('T')[0],
+        montant_total: getTotalPrice(),
+        type_service: serviceType,
+      };
+
+      if (serviceType === 'horaire') {
+        reservationData.creneaux = selectedSlots;
+        reservationData.duree_heures = selectedSlots.length;
+        reservationData.nombre_titres = null;
+      } else {
+        reservationData.creneaux = null;
+        reservationData.duree_heures = null;
+        reservationData.nombre_titres = nombreTitres;
+      }
+
+      const reservation = await createReservation(reservationData);
 
       if (!reservation) {
         setErrorMessage('Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.');
@@ -242,28 +270,39 @@ const Calendar: React.FC = () => {
       }
 
       // Mettre à jour l'état local
-      await loadBookedSlotsForDate(selectedDate);
+      if (serviceType === 'horaire') {
+        await loadBookedSlotsForDate(selectedDate);
+      }
       await loadStats();
       
       // Marquer la réservation comme confirmée
-      setReservationConfirmed(true);
-      setConfirmedReservation({
+      const confirmedData: any = {
         ...reservation,
-        selectedSlotsText: selectedSlots.length === 1 
+        serviceType: serviceType,
+      };
+
+      if (serviceType === 'horaire') {
+        confirmedData.selectedSlotsText = selectedSlots.length === 1 
           ? baseTimeSlots.find(slot => slot.id === selectedSlots[0])?.time
           : (() => {
               const firstSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[0]);
               const lastSlot = baseTimeSlots.find(slot => slot.id === selectedSlots[selectedSlots.length - 1]);
               const endTime = lastSlot?.time.split(' - ')[1];
               return `${firstSlot?.time.split(' - ')[0]} - ${endTime}`;
-            })(),
-        selectedDateFormatted: new Date(selectedDate).toLocaleDateString('fr-FR', { 
+            })();
+        confirmedData.selectedDateFormatted = new Date(selectedDate).toLocaleDateString('fr-FR', { 
           weekday: 'long', 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric' 
-        })
-      });
+        });
+      } else {
+        confirmedData.nombreTitres = nombreTitres;
+        confirmedData.serviceLabel = serviceType === 'mixage' ? 'Mixage de titre' : 'Mastering';
+      }
+
+      setReservationConfirmed(true);
+      setConfirmedReservation(confirmedData);
       setIsLoading(false);
       
       // Scroll vers la section de confirmation
@@ -309,6 +348,8 @@ const Calendar: React.FC = () => {
   const handleNewReservation = () => {
     setReservationConfirmed(false);
     setConfirmedReservation(null);
+    setServiceType('horaire');
+    setNombreTitres(1);
     setSelectedDate('');
     setSelectedSlots([]);
     setFormData({
@@ -428,13 +469,119 @@ const Calendar: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Calendar Section */}
           <div className="space-y-8">
-            {/* Date Selection */}
+            {/* Service Type Selection */}
             <div>
-              <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                <CalendarIcon className="w-5 h-5 mr-2 text-orange-400" />
-                Sélectionner une date
-              </h3>
-              <div className="grid grid-cols-7 gap-2">
+              <h3 className="text-xl font-semibold text-white mb-4">Type de Service</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <button
+                  onClick={() => {
+                    setServiceType('horaire');
+                    setNombreTitres(1);
+                  }}
+                  className={`p-4 rounded-lg text-center transition-all duration-300 ${
+                    serviceType === 'horaire'
+                      ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg border-2 border-orange-400'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-2 border-gray-700'
+                  }`}
+                >
+                  <Clock className="w-6 h-6 mx-auto mb-2" />
+                  <div className="font-semibold">Réservation Horaire</div>
+                  <div className="text-xs mt-1">30,000 FCFA/h</div>
+                </button>
+                <button
+                  onClick={() => {
+                    setServiceType('mixage');
+                    setSelectedDate('');
+                    setSelectedSlots([]);
+                  }}
+                  className={`p-4 rounded-lg text-center transition-all duration-300 ${
+                    serviceType === 'mixage'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg border-2 border-purple-400'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-2 border-gray-700'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                  <div className="font-semibold">Mixage de Titre</div>
+                  <div className="text-xs mt-1">150,000 FCFA/titre</div>
+                </button>
+                <button
+                  onClick={() => {
+                    setServiceType('mastering');
+                    setSelectedDate('');
+                    setSelectedSlots([]);
+                  }}
+                  className={`p-4 rounded-lg text-center transition-all duration-300 ${
+                    serviceType === 'mastering'
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg border-2 border-blue-400'
+                      : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-2 border-gray-700'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  </svg>
+                  <div className="font-semibold">Mastering</div>
+                  <div className="text-xs mt-1">70,000 FCFA/titre</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Nombre de titres pour Mixage/Mastering */}
+            {(serviceType === 'mixage' || serviceType === 'mastering') && (
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">Nombre de Titres</h3>
+                <div className="bg-gray-800/50 backdrop-blur-md rounded-xl p-6 border border-gray-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={() => setNombreTitres(Math.max(1, nombreTitres - 1))}
+                      className="w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white font-bold text-xl transition-colors"
+                    >
+                      -
+                    </button>
+                    <div className="text-center">
+                      <div className="text-4xl font-bold text-white">{nombreTitres}</div>
+                      <div className="text-sm text-gray-400">titre{nombreTitres > 1 ? 's' : ''}</div>
+                    </div>
+                    <button
+                      onClick={() => setNombreTitres(Math.min(20, nombreTitres + 1))}
+                      className="w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-lg flex items-center justify-center text-white font-bold text-xl transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={nombreTitres}
+                    onChange={(e) => setNombreTitres(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
+                    <span>1</span>
+                    <span>20</span>
+                  </div>
+                  <div className="mt-4 p-4 bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-lg border border-orange-500/30">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-300 mb-1">Prix Total</div>
+                      <div className="text-2xl font-bold text-orange-400">
+                        {getTotalPrice().toLocaleString()} FCFA
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Date Selection - Only for Horaire */}
+            {serviceType === 'horaire' && (
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <CalendarIcon className="w-5 h-5 mr-2 text-orange-400" />
+                  Sélectionner une date
+                </h3>
+                <div className="grid grid-cols-7 gap-2">
                 {dates.map((date) => (
                   <button
                     key={date.date}
@@ -450,11 +597,12 @@ const Calendar: React.FC = () => {
                     <div className="text-xs">{date.month}</div>
                   </button>
                 ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Time Slots */}
-            {selectedDate && (
+            {/* Time Slots - Only for Horaire */}
+            {serviceType === 'horaire' && selectedDate && (
               <div>
                 <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                   <Clock className="w-5 h-5 mr-2 text-red-400" />
@@ -500,7 +648,7 @@ const Calendar: React.FC = () => {
               </div>
             )}
 
-            {selectedSlots.length > 0 && (
+            {serviceType === 'horaire' && selectedSlots.length > 0 && (
               <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-4">
                 <h4 className="font-semibold text-white mb-2">Créneaux sélectionnés</h4>
                 <div className="text-sm text-gray-300 space-y-1">
@@ -532,12 +680,16 @@ const Calendar: React.FC = () => {
                 <div className="text-xs text-gray-400 mt-2">
                   * Studio ouvert 6j/7 (Lun-Sam) - Paiement échelonné possible pour mixage
                 </div>
-                <div className="text-xs text-orange-400 mt-2">
-                  ℹ️ Les réservations se réinitialisent automatiquement chaque 1er du mois
-                </div>
-                <div className="text-xs text-yellow-400 mt-1">
-                  ⏰ Réservation minimum 20 minutes à l'avance
-                </div>
+                {serviceType === 'horaire' && (
+                  <>
+                    <div className="text-xs text-orange-400 mt-2">
+                      ℹ️ Les réservations se réinitialisent automatiquement chaque 1er du mois
+                    </div>
+                    <div className="text-xs text-yellow-400 mt-1">
+                      ⏰ Réservation minimum 20 minutes à l'avance
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -607,18 +759,29 @@ const Calendar: React.FC = () => {
                   </div>
 
                   {/* Booking Summary */}
-                  {selectedDate && selectedSlots.length > 0 && (
+                  {((serviceType === 'horaire' && selectedDate && selectedSlots.length > 0) || 
+                    (serviceType !== 'horaire' && nombreTitres > 0)) && (
                     <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 rounded-lg p-4 border border-orange-500/30">
                       <h4 className="font-semibold text-white mb-2">Récapitulatif</h4>
                       <div className="text-sm text-gray-300 space-y-1">
-                        <div>Date: {new Date(selectedDate).toLocaleDateString('fr-FR', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}</div>
-                        <div>Créneau: {getSelectedSlotsText()}</div>
-                        <div>Durée: {selectedSlots.length} heure(s)</div>
+                        <div>Type: {
+                          serviceType === 'horaire' ? 'Réservation Horaire' :
+                          serviceType === 'mixage' ? 'Mixage de Titre' : 'Mastering'
+                        }</div>
+                        {serviceType === 'horaire' ? (
+                          <>
+                            <div>Date: {new Date(selectedDate).toLocaleDateString('fr-FR', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })}</div>
+                            <div>Créneau: {getSelectedSlotsText()}</div>
+                            <div>Durée: {selectedSlots.length} heure(s)</div>
+                          </>
+                        ) : (
+                          <div>Nombre de titres: {nombreTitres}</div>
+                        )}
                         <div className="text-orange-400 font-semibold">
                           Total à payer: {getTotalPrice().toLocaleString()} FCFA
                         </div>
@@ -675,16 +838,26 @@ const Calendar: React.FC = () => {
                     <div><strong>Nom:</strong> {confirmedReservation?.nom}</div>
                     <div><strong>Email:</strong> {confirmedReservation?.email}</div>
                     <div><strong>Téléphone:</strong> {confirmedReservation?.telephone}</div>
-                    <div><strong>Date:</strong> {confirmedReservation?.selectedDateFormatted}</div>
-                    <div><strong>Créneau:</strong> {confirmedReservation?.selectedSlotsText}</div>
-                    <div><strong>Durée:</strong> {confirmedReservation?.duree_heures} heure(s)</div>
+                    <div><strong>Type de service:</strong> {
+                      confirmedReservation?.serviceType === 'horaire' ? 'Réservation Horaire' :
+                      confirmedReservation?.serviceType === 'mixage' ? 'Mixage de Titre' : 'Mastering'
+                    }</div>
+                    {confirmedReservation?.serviceType === 'horaire' ? (
+                      <>
+                        <div><strong>Date:</strong> {confirmedReservation?.selectedDateFormatted}</div>
+                        <div><strong>Créneau:</strong> {confirmedReservation?.selectedSlotsText}</div>
+                        <div><strong>Durée:</strong> {confirmedReservation?.duree_heures} heure(s)</div>
+                      </>
+                    ) : (
+                      <div><strong>Nombre de titres:</strong> {confirmedReservation?.nombreTitres}</div>
+                    )}
                     <div className="text-orange-400 font-semibold text-lg">
                       <strong>Total:</strong> {confirmedReservation?.montant_total.toLocaleString()} FCFA
                     </div>
                   </div>
                 </div>
 
-                {/* Bouton de paiement Wave */}
+                {/* Bouton de paiement*/}
                 {confirmedReservation && (
         <div className="mt-6">
           <PayButton
@@ -824,12 +997,22 @@ const Calendar: React.FC = () => {
                           </div>
                           
                           <div className="mb-3">
+                            <div className="text-sm text-purple-400 mb-1 font-semibold">
+                              🎯 {reservation.type_service === 'horaire' ? 'Réservation Horaire' :
+                                  reservation.type_service === 'mixage' ? 'Mixage de Titre' : 'Mastering'}
+                            </div>
                             <div className="text-sm text-white mb-1">
                               📅 {formatDateForDisplay(reservation.date_reservation)}
                             </div>
-                            <div className="text-sm text-gray-300 mb-1">
-                              ⏰ {reservation.duree_heures} heure{reservation.duree_heures > 1 ? 's' : ''}
-                            </div>
+                            {reservation.type_service === 'horaire' ? (
+                              <div className="text-sm text-gray-300 mb-1">
+                                ⏰ {reservation.duree_heures} heure{(reservation.duree_heures || 0) > 1 ? 's' : ''}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-300 mb-1">
+                                🎵 {reservation.nombre_titres} titre{(reservation.nombre_titres || 0) > 1 ? 's' : ''}
+                              </div>
+                            )}
                             <div className="text-sm text-orange-400 font-semibold">
                               💰 {reservation.montant_total.toLocaleString()} FCFA
                             </div>
@@ -840,19 +1023,21 @@ const Calendar: React.FC = () => {
                             )}
                           </div>
                           
-                          <div className="flex flex-wrap gap-2">
-                            {reservation.creneaux.map((slotId) => {
-                              const slot = baseTimeSlots.find(s => s.id === slotId);
-                              return (
-                                <span
-                                  key={slotId}
-                                  className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs border border-orange-500/30"
-                                >
-                                  {slot ? slot.time : slotId}
-                                </span>
-                              );
-                            })}
-                          </div>
+                          {reservation.type_service === 'horaire' && reservation.creneaux && (
+                            <div className="flex flex-wrap gap-2">
+                              {reservation.creneaux.map((slotId: string) => {
+                                const slot = baseTimeSlots.find(s => s.id === slotId);
+                                return (
+                                  <span
+                                    key={slotId}
+                                    className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs border border-orange-500/30"
+                                  >
+                                    {slot ? slot.time : slotId}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                           
                           <div className="text-xs text-gray-500 mt-2">
                             Créé le {new Date(reservation.created_at).toLocaleDateString('fr-FR', {
