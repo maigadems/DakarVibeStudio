@@ -11,7 +11,7 @@ import Footer from './components/Footer';
 
 function App() {
   // Variable pour activer/désactiver le mode maintenance
-  const isMaintenanceMode = false; // Changer à false pour désactiver la maintenance
+  const isMaintenanceMode = true; // Changer à false pour désactiver la maintenance
 
   // Si le mode maintenance est activé, afficher uniquement la page de maintenance
   if (isMaintenanceMode) {
