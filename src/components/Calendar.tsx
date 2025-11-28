@@ -861,7 +861,7 @@ const Calendar: React.FC = () => {
                 {confirmedReservation && (
         <div className="mt-6">
           <PayButton
-            amount={montant}
+            amount={confirmedReservation.type_service === 'horaire' ? montant/2 : montant}
             description="Paiement de la réservation"
             name={namev}
             date={datev}
