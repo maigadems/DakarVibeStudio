@@ -5,6 +5,18 @@ interface PayButtonProps {
   description: string;
   name: string;
   date: string;
+  reservationData: {
+    nom: string;
+    email: string;
+    telephone: string;
+    message: string;
+    date_reservation: string;
+    creneaux?: string[] | null;
+    duree_heures?: number | null;
+    montant_total: number;
+    type_service: 'horaire' | 'mixage' | 'mastering';
+    nombre_titres?: number | null;
+  };
 }
 
 interface PaymentResponse {
@@ -15,7 +27,7 @@ interface PaymentResponse {
   description: string;
 }
 
-const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date }) => {
+const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, reservationData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,7 +43,8 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date }
           amount,
           description,
           name,
-          date
+          date,
+          reservationData // ✅ Envoyer les données complètes de réservation
         }),
       });
 

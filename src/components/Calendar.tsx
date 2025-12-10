@@ -240,7 +240,7 @@ const Calendar: React.FC = () => {
         return;
       }
 
-      // Enregistrer la réservation dans Supabase
+      // ✅ Préparer les données de réservation (SANS les enregistrer dans Supabase)
       const reservationData: any = {
         nom: formData.nom,
         email: formData.email,
@@ -261,23 +261,9 @@ const Calendar: React.FC = () => {
         reservationData.nombre_titres = nombreTitres;
       }
 
-      const reservation = await createReservation(reservationData);
-
-      if (!reservation) {
-        setErrorMessage('Erreur lors de l\'enregistrement de la réservation. Veuillez réessayer.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Mettre à jour l'état local
-      if (serviceType === 'horaire') {
-        await loadBookedSlotsForDate(selectedDate);
-      }
-      await loadStats();
-      
-      // Marquer la réservation comme confirmée
+      // ✅ Préparer les données pour l'affichage de confirmation
       const confirmedData: any = {
-        ...reservation,
+        ...reservationData,
         serviceType: serviceType,
       };
 
@@ -301,6 +287,7 @@ const Calendar: React.FC = () => {
         confirmedData.serviceLabel = serviceType === 'mixage' ? 'Mixage de titre' : 'Mastering';
       }
 
+      // ✅ Afficher la confirmation SANS créer la réservation
       setReservationConfirmed(true);
       setConfirmedReservation(confirmedData);
       setIsLoading(false);
@@ -314,8 +301,8 @@ const Calendar: React.FC = () => {
       }, 100);
       
     } catch (error) {
-      console.error('Erreur lors de la réservation:', error);
-      setErrorMessage('Erreur lors de l\'enregistrement. Veuillez réessayer.');
+      console.error('Erreur lors de la validation:', error);
+      setErrorMessage('Erreur lors de la validation. Veuillez réessayer.');
       setIsLoading(false);
     }
   };
@@ -865,6 +852,7 @@ const Calendar: React.FC = () => {
             description="Paiement de la réservation"
             name={namev}
             date={datev}
+            reservationData={confirmedReservation}
           />
         </div>
       )}
