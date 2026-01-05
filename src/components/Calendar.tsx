@@ -41,6 +41,7 @@ const Calendar: React.FC = () => {
     message: ''
   });
   const [errorMessage, setErrorMessage] = useState('');
+  const [paymentOption, setPaymentOption] = useState<'half' | 'full'>('half'); // Option de paiement pour réservations horaires
 
   // Charger les créneaux réservés pour une date
   const loadBookedSlotsForDate = async (date: string) => {
@@ -265,6 +266,7 @@ const Calendar: React.FC = () => {
       const confirmedData: any = {
         ...reservationData,
         serviceType: serviceType,
+        paymentOption: serviceType === 'horaire' ? paymentOption : 'full', // Ajouter l'option de paiement
       };
 
       if (serviceType === 'horaire') {
@@ -339,6 +341,7 @@ const Calendar: React.FC = () => {
     setNombreTitres(1);
     setSelectedDate('');
     setSelectedSlots([]);
+    setPaymentOption('half'); // Réinitialiser l'option de paiement
     setFormData({
       nom: '',
       email: '',
@@ -745,6 +748,66 @@ const Calendar: React.FC = () => {
                     />
                   </div>
 
+                  {/* Option de paiement pour réservations horaires */}
+                  {serviceType === 'horaire' && selectedDate && selectedSlots.length > 0 && (
+                    <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-lg p-4 border border-purple-500/30">
+                      <h4 className="font-semibold text-white mb-3">Choisissez votre option de paiement</h4>
+                      <div className="space-y-3">
+                        <button
+                          type="button"
+                          onClick={() => setPaymentOption('half')}
+                          className={`w-full p-4 rounded-lg text-left transition-all duration-300 ${
+                            paymentOption === 'half'
+                              ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg border-2 border-green-400'
+                              : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-2 border-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="text-2xl">💳</div>
+                            <div className="flex-1">
+                              <div className="font-semibold text-base mb-1">Pré-session (50%)</div>
+                              <div className="text-sm opacity-90">
+                                Payez {(getTotalPrice() / 2).toLocaleString()} FCFA maintenant
+                              </div>
+                              <div className="text-xs mt-1 opacity-75">
+                                + {(getTotalPrice() / 2).toLocaleString()} FCFA à payer sur place
+                              </div>
+                            </div>
+                            {paymentOption === 'half' && (
+                              <div className="text-green-300">✓</div>
+                            )}
+                          </div>
+                        </button>
+                        
+                        <button
+                          type="button"
+                          onClick={() => setPaymentOption('full')}
+                          className={`w-full p-4 rounded-lg text-left transition-all duration-300 ${
+                            paymentOption === 'full'
+                              ? 'bg-gradient-to-r from-orange-600 to-red-600 text-white shadow-lg border-2 border-orange-400'
+                              : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border-2 border-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="text-2xl">💰</div>
+                            <div className="flex-1">
+                              <div className="font-semibold text-base mb-1">Session complète (100%)</div>
+                              <div className="text-sm opacity-90">
+                                Payez {getTotalPrice().toLocaleString()} FCFA maintenant
+                              </div>
+                              <div className="text-xs mt-1 opacity-75">
+                                Rien à payer sur place
+                              </div>
+                            </div>
+                            {paymentOption === 'full' && (
+                              <div className="text-orange-300">✓</div>
+                            )}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Booking Summary */}
                   {((serviceType === 'horaire' && selectedDate && selectedSlots.length > 0) || 
                     (serviceType !== 'horaire' && nombreTitres > 0)) && (
@@ -769,8 +832,41 @@ const Calendar: React.FC = () => {
                         ) : (
                           <div>Nombre de titres: {nombreTitres}</div>
                         )}
-                        <div className="text-orange-400 font-semibold">
-                          Total à payer: {getTotalPrice().toLocaleString()} FCFA
+                        <div className="border-t border-orange-500/30 pt-2 mt-2">
+                          <div className="text-white font-semibold mb-1">
+                            Montant total: {getTotalPrice().toLocaleString()} FCFA
+                          </div>
+                          {serviceType === 'horaire' && (
+                            <div className="space-y-1">
+                              {paymentOption === 'half' ? (
+                                <>
+                                  <div className="text-green-400 font-semibold">
+                                    💳 À payer maintenant: {(getTotalPrice() / 2).toLocaleString()} FCFA (50%)
+                                  </div>
+                                  <div className="text-yellow-400 font-semibold">
+                                    🏢 À payer sur place: {(getTotalPrice() / 2).toLocaleString()} FCFA (50%)
+                                  </div>
+                                  <div className="text-xs text-blue-300 mt-2 bg-blue-500/10 p-2 rounded border border-blue-500/30">
+                                    ℹ️ Vous avez choisi l'option pré-session. Payez 50% maintenant, le reste au studio.
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-orange-400 font-semibold">
+                                    💳 À payer maintenant: {getTotalPrice().toLocaleString()} FCFA (100%)
+                                  </div>
+                                  <div className="text-xs text-green-300 mt-2 bg-green-500/10 p-2 rounded border border-green-500/30">
+                                    ✓ Vous avez choisi l'option session complète. Paiement total maintenant, rien à payer sur place.
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          {serviceType !== 'horaire' && (
+                            <div className="text-orange-400 font-semibold">
+                              💳 À payer maintenant: {getTotalPrice().toLocaleString()} FCFA
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -816,6 +912,40 @@ const Calendar: React.FC = () => {
                   <p className="text-gray-300 mb-6">
                     Votre réservation a été enregistrée avec succès dans notre système.
                   </p>
+                  {confirmedReservation?.serviceType === 'horaire' && (
+                    <div className={`border rounded-lg p-4 mb-6 max-w-2xl mx-auto ${
+                      confirmedReservation?.paymentOption === 'half'
+                        ? 'bg-blue-500/10 border-blue-500/30'
+                        : 'bg-green-500/10 border-green-500/30'
+                    }`}>
+                      <div className="flex items-start space-x-3">
+                        <div className="text-2xl">{confirmedReservation?.paymentOption === 'half' ? '💡' : '✓'}</div>
+                        <div className="text-left">
+                          <h4 className={`font-semibold mb-2 ${
+                            confirmedReservation?.paymentOption === 'half' ? 'text-blue-300' : 'text-green-300'
+                          }`}>
+                            {confirmedReservation?.paymentOption === 'half' 
+                              ? 'Option Pré-session sélectionnée'
+                              : 'Option Session complète sélectionnée'
+                            }
+                          </h4>
+                          <p className="text-sm text-gray-300">
+                            {confirmedReservation?.paymentOption === 'half' ? (
+                              <>
+                                Vous allez payer <span className="font-bold text-green-400">50% du montant total maintenant</span> pour confirmer votre créneau. 
+                                Les <span className="font-bold text-yellow-400">50% restants seront à régler directement au studio</span> le jour de votre session.
+                              </>
+                            ) : (
+                              <>
+                                Vous allez payer <span className="font-bold text-orange-400">100% du montant total maintenant</span>. 
+                                <span className="font-bold text-green-400"> Rien à payer sur place</span>, votre session est entièrement réglée.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Récapitulatif de la réservation confirmée */}
@@ -838,8 +968,37 @@ const Calendar: React.FC = () => {
                     ) : (
                       <div><strong>Nombre de titres:</strong> {confirmedReservation?.nombreTitres}</div>
                     )}
-                    <div className="text-orange-400 font-semibold text-lg">
-                      <strong>Total:</strong> {confirmedReservation?.montant_total.toLocaleString()} FCFA
+                    <div className="border-t border-green-500/30 pt-3 mt-3 space-y-2">
+                      <div className="text-white font-semibold text-base">
+                        <strong>Montant total de la réservation:</strong> {confirmedReservation?.montant_total.toLocaleString()} FCFA
+                      </div>
+                      {confirmedReservation?.serviceType === 'horaire' ? (
+                        <>
+                          {confirmedReservation?.paymentOption === 'half' ? (
+                            <>
+                              <div className="text-green-400 font-semibold text-base">
+                                <strong>💳 À payer maintenant (50%):</strong> {(confirmedReservation?.montant_total / 2).toLocaleString()} FCFA
+                              </div>
+                              <div className="text-yellow-400 font-semibold text-base">
+                                <strong>🏢 À payer sur place (50%):</strong> {(confirmedReservation?.montant_total / 2).toLocaleString()} FCFA
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-orange-400 font-semibold text-base">
+                                <strong>💳 À payer maintenant (100%):</strong> {confirmedReservation?.montant_total.toLocaleString()} FCFA
+                              </div>
+                              <div className="text-green-400 font-semibold text-base">
+                                <strong>✓ À payer sur place:</strong> 0 FCFA
+                              </div>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-orange-400 font-semibold text-base">
+                          <strong>💳 À payer maintenant:</strong> {confirmedReservation?.montant_total.toLocaleString()} FCFA
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -848,7 +1007,11 @@ const Calendar: React.FC = () => {
                 {confirmedReservation && (
         <div className="mt-6">
           <PayButton
-            amount={confirmedReservation.type_service === 'horaire' ? montant/2 : montant}
+            amount={
+              confirmedReservation.type_service === 'horaire' 
+                ? (confirmedReservation.paymentOption === 'half' ? montant/2 : montant)
+                : montant
+            }
             description="Paiement de la réservation"
             name={namev}
             date={datev}

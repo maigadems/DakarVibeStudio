@@ -36,29 +36,50 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, 
     setError(null);
 
     try {
+      // ⚠️ IMPORTANT: Le backend doit être mis à jour pour accepter reservationData
+      // En attendant, on envoie les deux formats pour compatibilité
+      const payload: any = {
+        amount,
+        description,
+        name,
+        date
+      };
+
+      // ✅ Ajouter reservationData si le backend est mis à jour
+      // Le nouveau backend utilisera ces données pour créer la réservation après paiement
+      if (reservationData) {
+        payload.reservationData = reservationData;
+      }
+
+      console.log('📤 Envoi de la requête de paiement:', payload);
+
       const response = await fetch("https://back-westaf.onrender.com/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount,
-          description,
-          name,
-          date,
-          reservationData // ✅ Envoyer les données complètes de réservation
-        }),
+        body: JSON.stringify(payload),
       });
 
+      console.log('📥 Statut de la réponse:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Erreur backend:', errorText);
+        throw new Error(`Erreur serveur (${response.status}): ${errorText}`);
+      }
+
       const data: PaymentResponse = await response.json();
+      console.log('📥 Données reçues:', data);
 
       if (data.redirectUrl) {
+        console.log('✅ Redirection vers PayTech');
         // ✅ Redirection vers PayTech
         window.location.href = data.redirectUrl;
       } else {
         throw new Error(data.message || "Impossible de créer le paiement");
       }
-    } catch (err) {
-      console.error(err);
-      setError("Erreur lors du paiement. Vérifie la console.");
+    } catch (err: any) {
+      console.error('❌ Erreur complète:', err);
+      setError(err.message || "Erreur lors du paiement. Consultez la console pour plus de détails.");
     } finally {
       setLoading(false);
     }
