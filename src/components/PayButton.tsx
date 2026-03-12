@@ -53,7 +53,7 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, 
 
       console.log('📤 Envoi de la requête de paiement:', payload);
 
-      const response = await fetch("https://back-westaf.onrender.com/create-payment", {
+      const response = await fetch("https://back-westaf.vercel.app/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
