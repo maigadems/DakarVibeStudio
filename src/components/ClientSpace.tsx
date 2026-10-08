@@ -15,6 +15,8 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
   const [error, setError] = useState('');
   const [oldPwd, setOldPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [loginPwd, setLoginPwd] = useState('');
   const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = async () => {
@@ -32,6 +34,7 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
     setError('');
     const r = await clientLogin(telephone, password);
     if (!r.ok) return setError(r.message);
+    setLoginPwd(password);
     setPassword('');
     setLoading(true);
     load();
@@ -39,11 +42,17 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const r = await clientChangePassword(oldPwd, newPwd);
+    const current = profile?.mustChange && loginPwd ? loginPwd : oldPwd;
+    if (profile?.mustChange && newPwd !== confirmPwd) {
+      return setPwdMsg({ ok: false, text: 'Les deux mots de passe ne correspondent pas.' });
+    }
+    const r = await clientChangePassword(current, newPwd);
     setPwdMsg({ ok: r.ok, text: r.ok ? 'Mot de passe modifié.' : r.message });
     if (r.ok) {
       setOldPwd('');
       setNewPwd('');
+      setConfirmPwd('');
+      setLoginPwd('');
       load();
     }
   };
@@ -76,8 +85,11 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
             <p className="text-sm text-gray-300">
               C'est votre première connexion : choisissez un nouveau mot de passe personnel pour accéder à votre espace.
             </p>
-            <input className={inputCls} type="password" placeholder="Mot de passe reçu (actuel)" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} autoComplete="current-password" required />
-            <input className={inputCls} type="password" placeholder="Nouveau mot de passe (8 caractères min.)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
+            {!loginPwd && (
+              <input className={inputCls} type="password" placeholder="Mot de passe reçu (actuel)" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} autoComplete="current-password" required />
+            )}
+            <input className={inputCls} type="password" placeholder="Nouveau mot de passe, différent de l'actuel (8 caractères min.)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
+            <input className={inputCls} type="password" placeholder="Confirmer le nouveau mot de passe" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
             {pwdMsg && <p className={`text-sm ${pwdMsg.ok ? 'text-green-400' : 'text-red-400'}`}>{pwdMsg.text}</p>}
             <div className="flex items-center gap-4">
               <button className="bg-orange-500 hover:bg-orange-600 rounded-lg px-6 py-3 font-semibold">Valider</button>
@@ -131,7 +143,8 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
             <form onSubmit={changePassword} className="bg-gray-800 rounded-2xl p-6 max-w-md space-y-3">
               <h2 className="text-xl font-semibold">Changer mon mot de passe</h2>
               <input className={inputCls} type="password" placeholder="Mot de passe actuel" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} autoComplete="current-password" required />
-              <input className={inputCls} type="password" placeholder="Nouveau mot de passe (8 caractères min.)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
+              <input className={inputCls} type="password" placeholder="Nouveau mot de passe, différent de l'actuel (8 caractères min.)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
+            <input className={inputCls} type="password" placeholder="Confirmer le nouveau mot de passe" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
               {pwdMsg && <p className={`text-sm ${pwdMsg.ok ? 'text-green-400' : 'text-red-400'}`}>{pwdMsg.text}</p>}
               <button className="bg-orange-500 hover:bg-orange-600 rounded-lg px-6 py-3 font-semibold">Enregistrer</button>
             </form>
