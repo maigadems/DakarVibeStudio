@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import PayButton from "./PayButton";
 import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye, Trash2 } from 'lucide-react';
 import { 
-  createReservation, 
   getAllReservations, 
   getBookedSlotsForDate, 
   getReservationStats,
   deleteReservation,
+  adminLogin,
+  adminLogout,
   type Reservation 
 } from '../utils/reservationService';
 
@@ -354,9 +355,9 @@ const Calendar: React.FC = () => {
     window.location.href = 'tel:+221710162323';
   };
 
-  const handleAdminLogin = (e: React.FormEvent) => {
+  const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminCredentials.login === 'JeussW' && adminCredentials.password === 'JeussW') {
+    if (await adminLogin(adminCredentials.login, adminCredentials.password)) {
       setIsAdminAuthenticated(true);
     } else {
       alert('Identifiants incorrects');
@@ -365,6 +366,7 @@ const Calendar: React.FC = () => {
   };
 
   const closeAdminModal = () => {
+    adminLogout();
     setShowAdminModal(false);
     setIsAdminAuthenticated(false);
     setAdminCredentials({ login: '', password: '' });
@@ -1208,7 +1210,7 @@ const Calendar: React.FC = () => {
                 {/* Actions admin */}
                 <div className="border-t border-gray-600 pt-4">
                   <div className="text-xs text-gray-400 text-center">
-                    💡 Toutes les réservations sont enregistrées dans Supabase
+                    💡 Toutes les réservations sont enregistrées dans la base de données
                   </div>
                 </div>
               </div>

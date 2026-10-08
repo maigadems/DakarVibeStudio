@@ -8,6 +8,7 @@ import Pricing from './components/Pricing';
 import AudioSection from './components/AudioSection';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import PaymentResult, { PENDING_PAYMENT_KEY } from './components/PaymentResult';
 
 function App() {
   // Variable pour activer/désactiver le mode maintenance
@@ -17,6 +18,16 @@ function App() {
   if (isMaintenanceMode) {
     return <MaintenancePage />;
   }
+
+  // Retour de PayTech (?payment=success|cancel&ref=...)
+  const [paymentResult, setPaymentResult] = useState<{ status: 'success' | 'cancel'; ref: string | null } | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('payment');
+    if (status !== 'success' && status !== 'cancel') return null;
+    const ref = params.get('ref');
+    window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+    return { status, ref };
+  });
 
   // Initialiser la section basée sur l'URL ou 'accueil' par défaut
   const [currentSection, setCurrentSection] = useState(() => {
@@ -201,6 +212,16 @@ function App() {
         {renderSection()}
       </main>
       <Footer />
+      {paymentResult && (
+        <PaymentResult
+          status={paymentResult.status}
+          reference={paymentResult.ref}
+          onClose={() => {
+            sessionStorage.removeItem(PENDING_PAYMENT_KEY);
+            setPaymentResult(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -53,7 +53,7 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, 
 
       console.log('📤 Envoi de la requête de paiement:', payload);
 
-      const response = await fetch("https://back-westaf.vercel.app/create-payment", {
+      const response = await fetch(`${(import.meta.env.VITE_API_URL || '').replace(/\/$/, '')}/create-payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -71,6 +71,7 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, 
       console.log('📥 Données reçues:', data);
 
       if (data.redirectUrl) {
+        sessionStorage.setItem('westaf_pending_payment', JSON.stringify({ amount, name, date }));
         console.log('✅ Redirection vers PayTech');
         // ✅ Redirection vers PayTech
         window.location.href = data.redirectUrl;
