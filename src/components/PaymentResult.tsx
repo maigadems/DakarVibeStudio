@@ -37,25 +37,33 @@ const buildWhatsAppMessage = (pending: any, reference: string | null) => {
     return `Bonjour, je viens d'effectuer le paiement de ma réservation.${reference ? ` Réf : ${reference}` : ''}`;
   }
   const lines = [
-    'Bonjour, je confirme ma réservation au studio Westaf Records :',
+    'Bonjour Westaf Records,',
+    'Je confirme ma réservation après paiement :',
     '',
-    `Nom : ${r.nom}`,
-    `Téléphone : ${r.telephone}`,
-    `Service : ${SERVICE_LABELS[r.type_service] || r.type_service}`
+    `👤 Nom : ${r.nom}`,
+    `📞 Téléphone : ${r.telephone}`,
+    ...(r.email ? [`✉️ Email : ${r.email}`] : []),
+    `🎙️ Service choisi : ${SERVICE_LABELS[r.type_service] || r.type_service}`
   ];
   if (r.type_service === 'horaire') {
-    lines.push(`Date : ${r.selectedDateFormatted}`);
-    lines.push(`Créneau : ${r.selectedSlotsText}`);
-    lines.push(`Durée : ${r.duree_heures} heure(s)`);
+    lines.push(`📅 Date : ${r.selectedDateFormatted}`);
+    lines.push(`🕒 Créneau : ${r.selectedSlotsText}`);
+    lines.push(`⏱️ Durée : ${r.duree_heures} heure(s)`);
   } else {
-    lines.push(`Nombre de titres : ${r.nombreTitres ?? r.nombre_titres}`);
+    lines.push(`🎵 Nombre de titres : ${r.nombreTitres ?? r.nombre_titres}`);
   }
-  lines.push(`Montant total : ${fmt(r.montant_total)} FCFA`);
-  lines.push(`Montant payé : ${fmt(pending.amount)} FCFA`);
+  lines.push('');
+  lines.push(`💰 Montant total : ${fmt(r.montant_total)} FCFA`);
+  lines.push(`✅ Montant payé : ${fmt(pending.amount)} FCFA`);
   if (r.type_service === 'horaire' && r.paymentOption === 'half') {
+    lines.push(`Type de paiement : acompte (50 %)`);
     lines.push(`Reste à payer au studio : ${fmt(r.montant_total - pending.amount)} FCFA`);
+  } else {
+    lines.push('Type de paiement : total');
   }
-  if (reference) lines.push(`Référence : ${reference}`);
+  if (r.message) lines.push(`📝 Remarques : ${r.message}`);
+  if (reference) lines.push(`🔖 Référence : ${reference}`);
+  lines.push('', 'Merci !');
   return lines.join('\n');
 };
 
@@ -90,6 +98,19 @@ const PaymentResult: React.FC<Props> = ({ status, reference, summary, revealKey,
     [reference, summary]
   );
   const r = pending?.reservationData;
+
+  const [copied, setCopied] = React.useState<string | null>(null);
+  const [saved, setSaved] = React.useState(false);
+  const needsAck = typeof creds === 'object' && !!creds.password && !saved;
+  const copy = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      window.prompt('Copiez :', value);
+    }
+  };
 
   const openWhatsApp = () => {
     const url = `https://wa.me/221778600482?text=${encodeURIComponent(buildWhatsAppMessage(pending, reference))}`;
@@ -137,27 +158,52 @@ const PaymentResult: React.FC<Props> = ({ status, reference, summary, revealKey,
           <p className="text-xs text-gray-400 mb-4">Création de votre espace client…</p>
         )}
         {isSuccess && typeof creds === 'object' && (
-          <div className="text-left text-sm bg-orange-500/10 border border-orange-500/40 rounded-lg p-4 mb-4">
-            <p className="font-semibold text-orange-300 mb-2">Votre espace client</p>
-            <div><strong>Identifiant :</strong> {creds.telephone}</div>
+          <div className="text-left bg-gradient-to-br from-orange-500/20 to-yellow-500/10 border-2 border-orange-400 rounded-xl p-5 mb-4 shadow-lg shadow-orange-500/20">
+            <p className="font-bold text-orange-300 text-lg mb-1 text-center">🔑 Votre espace client est prêt !</p>
+            <p className="text-xs text-gray-300 text-center mb-4">Suivez vos réservations et gérez votre compte à tout moment.</p>
+            <div className="bg-gray-900 rounded-lg p-3 mb-2 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-xs text-gray-400">Identifiant</div>
+                <div className="font-mono text-lg break-all">{creds.telephone}</div>
+              </div>
+              <button onClick={() => copy('id', creds.telephone)} className="shrink-0 bg-gray-700 hover:bg-gray-600 rounded px-3 py-2 text-sm">
+                {copied === 'id' ? 'Copié ✓' : 'Copier'}
+              </button>
+            </div>
             {creds.password ? (
               <>
-                <div><strong>Mot de passe :</strong> <span className="font-mono select-all">{creds.password}</span></div>
-                <p className="text-xs text-gray-400 mt-2">
-                  Notez-le maintenant : il ne sera plus affiché. Vous pourrez le modifier dans votre espace client.
-                </p>
+                <div className="bg-gray-900 rounded-lg p-3 mb-3 flex items-center justify-between gap-2 border border-orange-400">
+                  <div className="min-w-0">
+                    <div className="text-xs text-gray-400">Mot de passe temporaire</div>
+                    <div className="font-mono text-2xl text-orange-300 tracking-wider break-all select-all">{creds.password}</div>
+                  </div>
+                  <button onClick={() => copy('pw', creds.password as string)} className="shrink-0 bg-orange-500 hover:bg-orange-600 rounded px-3 py-2 text-sm font-semibold">
+                    {copied === 'pw' ? 'Copié ✓' : 'Copier'}
+                  </button>
+                </div>
+                <div className="bg-red-500/15 border border-red-400/60 rounded-lg p-3 text-sm text-red-200 mb-3">
+                  ⚠️ <strong>Ce mot de passe ne sera plus jamais affiché.</strong> Copiez-le, notez-le ou faites une capture d'écran maintenant.
+                  À votre première connexion, vous devrez le remplacer par un mot de passe personnel.
+                </div>
+                <label className="flex items-start gap-2 text-sm cursor-pointer mb-3">
+                  <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="mt-1" />
+                  J'ai enregistré mon mot de passe
+                </label>
               </>
             ) : (
-              <p className="text-xs text-gray-400 mt-2">Vous avez déjà un compte : utilisez votre mot de passe habituel.</p>
+              <p className="text-sm text-gray-300 mb-3">Vous avez déjà un compte : utilisez votre mot de passe habituel.</p>
             )}
             {onOpenClientSpace && (
-              <button onClick={onOpenClientSpace} className="mt-3 text-orange-400 hover:text-orange-300 underline">
+              <button
+                onClick={onOpenClientSpace}
+                disabled={!!creds.password && !saved}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-3 font-semibold"
+              >
                 Accéder à mon espace client
               </button>
             )}
           </div>
         )}
-
         <div className="flex flex-col gap-3">
           {isSuccess && (
             <button
@@ -167,7 +213,7 @@ const PaymentResult: React.FC<Props> = ({ status, reference, summary, revealKey,
               <MessageCircle size={18} /> Confirmer par WhatsApp
             </button>
           )}
-          <button onClick={onClose} className="bg-gray-700 hover:bg-gray-600 rounded-lg py-3">
+          <button onClick={onClose} disabled={needsAck} className="bg-gray-700 hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg py-3">
             Retour au site
           </button>
         </div>

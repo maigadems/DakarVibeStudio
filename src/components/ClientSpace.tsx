@@ -44,6 +44,7 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
     if (r.ok) {
       setOldPwd('');
       setNewPwd('');
+      load();
     }
   };
 
@@ -68,6 +69,20 @@ const ClientSpace: React.FC<{ goToReservation: () => void }> = ({ goToReservatio
             <input className={inputCls} type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <button className="w-full bg-orange-500 hover:bg-orange-600 rounded-lg py-3 font-semibold">Se connecter</button>
+          </form>
+        ) : profile.mustChange ? (
+          <form onSubmit={changePassword} className="bg-gray-800 rounded-2xl p-6 max-w-md space-y-3 border border-orange-500/50">
+            <h2 className="text-xl font-semibold text-orange-400">Bienvenue ! Sécurisez votre compte</h2>
+            <p className="text-sm text-gray-300">
+              C'est votre première connexion : choisissez un nouveau mot de passe personnel pour accéder à votre espace.
+            </p>
+            <input className={inputCls} type="password" placeholder="Mot de passe reçu (actuel)" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} autoComplete="current-password" required />
+            <input className={inputCls} type="password" placeholder="Nouveau mot de passe (8 caractères min.)" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} autoComplete="new-password" minLength={8} required />
+            {pwdMsg && <p className={`text-sm ${pwdMsg.ok ? 'text-green-400' : 'text-red-400'}`}>{pwdMsg.text}</p>}
+            <div className="flex items-center gap-4">
+              <button className="bg-orange-500 hover:bg-orange-600 rounded-lg px-6 py-3 font-semibold">Valider</button>
+              <button type="button" onClick={logout} className="text-sm text-gray-400 hover:text-white underline">Déconnexion</button>
+            </div>
           </form>
         ) : (
           <div className="space-y-8">

@@ -3,6 +3,7 @@ import { adminFetch, apiUrl, type Reservation } from './reservationService';
 export interface ClientProfile {
   telephone: string;
   nom: string | null;
+  mustChange: boolean;
   reservations: Reservation[];
 }
 
