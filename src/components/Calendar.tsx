@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import PayButton from "./PayButton";
-import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard, Settings, X, Eye, Trash2 } from 'lucide-react';
-import { 
-  getAllReservations, 
-  getBookedSlotsForDate, 
-  getReservationStats,
-  deleteReservation,
-  adminLogin,
-  adminLogout,
-  type Reservation 
-} from '../utils/reservationService';
+import { Calendar as CalendarIcon, Clock, User, Mail, Phone, MessageCircle, CreditCard } from 'lucide-react';
+import { getBookedSlotsForDate } from '../utils/reservationService';
 
 const Calendar: React.FC = () => {
   const [serviceType, setServiceType] = useState<'horaire' | 'mixage' | 'mastering'>('horaire');
@@ -17,16 +9,6 @@ const Calendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<{[key: string]: string[]}>({});
-  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
-  const [stats, setStats] = useState({
-    totalReservations: 0,
-    totalSlots: 0,
-    totalRevenue: 0,
-    currentMonth: new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-  });
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [adminCredentials, setAdminCredentials] = useState({ login: '', password: '' });
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [reservationConfirmed, setReservationConfirmed] = useState(false);
   const [confirmedReservation, setConfirmedReservation] = useState<any>(null);
@@ -53,32 +35,12 @@ const Calendar: React.FC = () => {
     }));
   };
 
-  // Charger toutes les réservations (pour l'admin)
-  const loadAllReservations = async () => {
-    const reservations = await getAllReservations();
-    setAllReservations(reservations);
-  };
-
-  // Charger les statistiques
-  const loadStats = async () => {
-    const statsData = await getReservationStats();
-    setStats(statsData);
-  };
-
   // Charger les données au changement de date
   React.useEffect(() => {
     if (selectedDate) {
       loadBookedSlotsForDate(selectedDate);
     }
   }, [selectedDate]);
-
-  // Charger les données initiales
-  React.useEffect(() => {
-    loadStats();
-    if (isAdminAuthenticated) {
-      loadAllReservations();
-    }
-  }, [isAdminAuthenticated]);
 
   const baseTimeSlots = [
     { id: '08-09', time: '08h00 - 09h00' },
@@ -355,85 +317,6 @@ const Calendar: React.FC = () => {
     window.location.href = 'tel:+221778600482';
   };
 
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (await adminLogin(adminCredentials.login, adminCredentials.password)) {
-      setIsAdminAuthenticated(true);
-    } else {
-      alert('Identifiants incorrects');
-      setAdminCredentials({ login: '', password: '' });
-    }
-  };
-
-  const closeAdminModal = () => {
-    adminLogout();
-    setShowAdminModal(false);
-    setIsAdminAuthenticated(false);
-    setAdminCredentials({ login: '', password: '' });
-  };
-
-  const handleDeleteClick = (reservation: Reservation) => {
-    setDeleteConfirmation({
-      isOpen: true,
-      reservationId: reservation.id,
-      reservationName: reservation.nom
-    });
-  };
-
-  const handleDeleteConfirm = async () => {
-    console.log('🗑️ Confirmation de suppression pour:', deleteConfirmation.reservationId);
-    
-    try {
-      setIsLoading(true);
-      
-      const success = await deleteReservation(deleteConfirmation.reservationId);
-      if (success) {
-        console.log('✅ Suppression réussie, rechargement des données...');
-        // Recharger les données
-        await loadAllReservations();
-        await loadStats();
-        alert('Réservation supprimée avec succès !');
-        // Recharger les créneaux réservés pour la date sélectionnée si elle existe
-        if (selectedDate) {
-          await loadBookedSlotsForDate(selectedDate);
-        }
-        console.log('✅ Données rechargées');
-      } else {
-        console.error('❌ Échec de la suppression');
-        alert('Erreur lors de la suppression de la réservation');
-      }
-    } catch (error) {
-      console.error('❌ Erreur lors de la suppression:', error);
-      alert('Erreur lors de la suppression de la réservation');
-    } finally {
-      setIsLoading(false);
-    }
-    
-    // Fermer la modal de confirmation
-    setDeleteConfirmation({
-      isOpen: false,
-      reservationId: '',
-      reservationName: ''
-    });
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteConfirmation({
-      isOpen: false,
-      reservationId: '',
-      reservationName: ''
-    });
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
   return (
     <section className="min-h-screen py-20 px-4 sm:px-6 lg:px-8 bg-gray-900 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
@@ -448,14 +331,6 @@ const Calendar: React.FC = () => {
             Choisissez votre date et créneau horaire, puis remplissez le formulaire pour finaliser votre réservation.
           </p>
           
-          {/* Bouton Admin discret */}
-          <button
-            onClick={() => setShowAdminModal(true)}
-            className="absolute top-0 right-0 w-6 h-6 bg-gray-800/50 hover:bg-gray-700/50 rounded-full flex items-center justify-center opacity-30 hover:opacity-60 transition-all duration-300"
-            title="Administration"
-          >
-            <Settings className="w-3 h-3 text-gray-400" />
-          </button>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
@@ -1035,227 +910,6 @@ const Calendar: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Admin */}
-      {showAdminModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-orange-500/20">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">
-                {isAdminAuthenticated ? 'Panneau d\'Administration' : 'Connexion Admin'}
-              </h3>
-              <button
-                onClick={closeAdminModal}
-                className="w-8 h-8 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4 text-white" />
-              </button>
-            </div>
-
-            {!isAdminAuthenticated ? (
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Login
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={adminCredentials.login}
-                    onChange={(e) => setAdminCredentials({ ...adminCredentials, login: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                    placeholder="Entrez votre login"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={adminCredentials.password}
-                    onChange={(e) => setAdminCredentials({ ...adminCredentials, password: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                    placeholder="Entrez votre mot de passe"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300"
-                >
-                  Se connecter
-                </button>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                {/* Statistiques */}
-                <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-lg p-4 border border-orange-500/20">
-                  <h4 className="text-lg font-semibold text-white mb-2">Statistiques du mois</h4>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-orange-400">{stats.totalReservations}</div>
-                      <div className="text-sm text-gray-400">Réservations</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-red-400">{stats.totalSlots}</div>
-                      <div className="text-sm text-gray-400">Créneaux réservés</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-yellow-400">{stats.totalRevenue.toLocaleString()}</div>
-                      <div className="text-sm text-gray-400">FCFA</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Liste des réservations */}
-                <div>
-                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-                    <Eye className="w-5 h-5 mr-2 text-orange-400" />
-                    Toutes les réservations
-                  </h4>
-                  
-                  {allReservations.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400">
-                      Aucune réservation trouvée
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {allReservations.map((reservation) => (
-                        <div key={reservation.id} className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h5 className="font-semibold text-white">{reservation.nom}</h5>
-                              <p className="text-sm text-gray-400">{reservation.email}</p>
-                              <p className="text-sm text-gray-400">{reservation.telephone}</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <button
-                                  onClick={() => handleDeleteClick(reservation)}
-                                  className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
-                                  title="Supprimer la réservation"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <div className={`text-xs px-2 py-1 rounded-full ${
-                                reservation.statut === 'confirmee' ? 'bg-green-500/20 text-green-400' :
-                                reservation.statut === 'annulee' ? 'bg-red-500/20 text-red-400' :
-                                'bg-yellow-500/20 text-yellow-400'
-                              }`}>
-                                {reservation.statut === 'confirmee' ? 'Confirmée' :
-                                 reservation.statut === 'annulee' ? 'Annulée' : 'Confirmée'}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-3">
-                            <div className="text-sm text-purple-400 mb-1 font-semibold">
-                              🎯 {reservation.type_service === 'horaire' ? 'Réservation Horaire' :
-                                  reservation.type_service === 'mixage' ? 'Mixage de Titre' : 'Mastering'}
-                            </div>
-                            <div className="text-sm text-white mb-1">
-                              📅 {formatDateForDisplay(reservation.date_reservation)}
-                            </div>
-                            {reservation.type_service === 'horaire' ? (
-                              <div className="text-sm text-gray-300 mb-1">
-                                ⏰ {reservation.duree_heures} heure{(reservation.duree_heures || 0) > 1 ? 's' : ''}
-                              </div>
-                            ) : (
-                              <div className="text-sm text-gray-300 mb-1">
-                                🎵 {reservation.nombre_titres} titre{(reservation.nombre_titres || 0) > 1 ? 's' : ''}
-                              </div>
-                            )}
-                            <div className="text-sm text-orange-400 font-semibold">
-                              💰 {reservation.montant_total.toLocaleString()} FCFA
-                            </div>
-                            {reservation.message && (
-                              <div className="text-xs text-gray-400 mt-2 italic">
-                                💬 {reservation.message}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {reservation.type_service === 'horaire' && reservation.creneaux && (
-                            <div className="flex flex-wrap gap-2">
-                              {reservation.creneaux.map((slotId: string) => {
-                                const slot = baseTimeSlots.find(s => s.id === slotId);
-                                return (
-                                  <span
-                                    key={slotId}
-                                    className="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-xs border border-orange-500/30"
-                                  >
-                                    {slot ? slot.time : slotId}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
-                          
-                          <div className="text-xs text-gray-500 mt-2">
-                            Créé le {new Date(reservation.created_at).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: '2-digit', 
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions admin */}
-                <div className="border-t border-gray-600 pt-4">
-                  <div className="text-xs text-gray-400 text-center">
-                    💡 Toutes les réservations sont enregistrées dans la base de données
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal de confirmation de suppression */}
-      {deleteConfirmation.isOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-red-500/20">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Confirmer la suppression</h3>
-              <p className="text-gray-300">
-                Êtes-vous sûr de vouloir supprimer la réservation de{' '}
-                <span className="font-semibold text-orange-400">{deleteConfirmation.reservationName}</span> ?
-              </p>
-              <p className="text-sm text-red-400 mt-2">
-                ⚠️ Cette action est irréversible
-              </p>
-            </div>
-
-            <div className="flex space-x-4">
-              <button
-                onClick={handleDeleteCancel}
-                className={`flex-1 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isLoading}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className={`flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isLoading}
-              >
-                {isLoading ? 'Suppression...' : 'Supprimer'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 };

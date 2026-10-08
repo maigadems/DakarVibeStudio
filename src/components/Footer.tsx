@@ -157,8 +157,13 @@ const Footer: React.FC = () => {
                 Politique de Confidentialité
               </a>
               <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-                CGV
               </a>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('navigateFromFooter', { detail: 'admin' }))}
+                className="text-gray-400 hover:text-white text-sm transition-colors"
+              >
+                Admin
+              </button>
             </div>
           </div>
         </div>

@@ -82,6 +82,14 @@ const Header: React.FC<HeaderProps> = ({ currentSection, setCurrentSection }) =>
             >
               Contact
             </button>
+            <button
+              onClick={() => handleNavigation('espace-client')}
+              className={`transition-colors ${
+                currentSection === 'espace-client' ? 'text-orange-400' : 'text-white hover:text-orange-400'
+              }`}
+            >
+              Espace client
+            </button>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -144,6 +152,14 @@ const Header: React.FC<HeaderProps> = ({ currentSection, setCurrentSection }) =>
                 }`}
               >
                 Contact
+              </button>
+              <button
+                onClick={() => handleNavigation('espace-client')}
+                className={`transition-colors text-left ${
+                  currentSection === 'espace-client' ? 'text-orange-400' : 'text-white hover:text-orange-400'
+                }`}
+              >
+                Espace client
               </button>
             </div>
           </nav>

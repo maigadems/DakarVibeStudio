@@ -12,6 +12,8 @@ export interface Reservation {
   creneaux: string[] | null;
   duree_heures: number | null;
   montant_total: number;
+  type_paiement: 'partiel' | 'total';
+  montant_paye: number;
   statut: 'en_attente' | 'confirmee' | 'annulee';
   type_service: 'horaire' | 'mixage' | 'mastering';
   nombre_titres: number | null;
@@ -21,7 +23,7 @@ export interface Reservation {
 
 let adminToken: string | null = null;
 
-const adminFetch = (path: string, init: RequestInit = {}) =>
+export const adminFetch = (path: string, init: RequestInit = {}) =>
   fetch(apiUrl(path), {
     ...init,
     headers: {

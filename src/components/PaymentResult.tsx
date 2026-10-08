@@ -1,11 +1,15 @@
 import React from 'react';
 import { CheckCircle, XCircle, MessageCircle } from 'lucide-react';
+import { fetchCredentials } from '../utils/accountService';
 
 export const PENDING_PAYMENT_KEY = 'westaf_pending_payment';
 
 interface Props {
   status: 'success' | 'cancel';
   reference: string | null;
+  summary?: any;
+  revealKey?: string | null;
+  onOpenClientSpace?: () => void;
   onClose: () => void;
 }
 
@@ -55,9 +59,36 @@ const buildWhatsAppMessage = (pending: any, reference: string | null) => {
   return lines.join('\n');
 };
 
-const PaymentResult: React.FC<Props> = ({ status, reference, onClose }) => {
+const PaymentResult: React.FC<Props> = ({ status, reference, summary, revealKey, onOpenClientSpace, onClose }) => {
   const isSuccess = status === 'success';
-  const pending = React.useMemo(() => readPending(reference), [reference]);
+  const [creds, setCreds] = React.useState<{ telephone: string; password: string | null } | 'waiting' | 'none'>('waiting');
+
+  // L'IPN PayTech peut arriver après le retour du client : on réessaie quelques secondes
+  React.useEffect(() => {
+    if (!isSuccess || !revealKey) {
+      setCreds('none');
+      return;
+    }
+    let cancelled = false;
+    let attempts = 0;
+    const poll = async () => {
+      const r = await fetchCredentials(revealKey);
+      if (cancelled) return;
+      if (r && r !== 'pending') return setCreds(r);
+      if (++attempts >= 15) return setCreds('none');
+      setTimeout(poll, 2000);
+    };
+    poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSuccess, revealKey]);
+
+  // Le résumé de l'URL de retour prime sur le stockage local
+  const pending = React.useMemo(
+    () => (summary ? { amount: summary.amount, reservationData: summary } : readPending(reference)),
+    [reference, summary]
+  );
   const r = pending?.reservationData;
 
   const openWhatsApp = () => {
@@ -101,6 +132,31 @@ const PaymentResult: React.FC<Props> = ({ status, reference, onClose }) => {
           </div>
         )}
         {isSuccess && reference && <p className="text-xs text-gray-400 mb-4">Référence : {reference}</p>}
+
+        {isSuccess && creds === 'waiting' && (
+          <p className="text-xs text-gray-400 mb-4">Création de votre espace client…</p>
+        )}
+        {isSuccess && typeof creds === 'object' && (
+          <div className="text-left text-sm bg-orange-500/10 border border-orange-500/40 rounded-lg p-4 mb-4">
+            <p className="font-semibold text-orange-300 mb-2">Votre espace client</p>
+            <div><strong>Identifiant :</strong> {creds.telephone}</div>
+            {creds.password ? (
+              <>
+                <div><strong>Mot de passe :</strong> <span className="font-mono select-all">{creds.password}</span></div>
+                <p className="text-xs text-gray-400 mt-2">
+                  Notez-le maintenant : il ne sera plus affiché. Vous pourrez le modifier dans votre espace client.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-gray-400 mt-2">Vous avez déjà un compte : utilisez votre mot de passe habituel.</p>
+            )}
+            {onOpenClientSpace && (
+              <button onClick={onOpenClientSpace} className="mt-3 text-orange-400 hover:text-orange-300 underline">
+                Accéder à mon espace client
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           {isSuccess && (

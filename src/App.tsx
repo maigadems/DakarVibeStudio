@@ -9,6 +9,8 @@ import AudioSection from './components/AudioSection';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import PaymentResult, { PENDING_PAYMENT_KEY } from './components/PaymentResult';
+import ClientSpace from './components/ClientSpace';
+import AdminPanel from './components/AdminPanel';
 
 function App() {
   // Variable pour activer/désactiver le mode maintenance
@@ -20,13 +22,20 @@ function App() {
   }
 
   // Retour de PayTech (?payment=success|cancel&ref=...)
-  const [paymentResult, setPaymentResult] = useState<{ status: 'success' | 'cancel'; ref: string | null } | null>(() => {
+  const [paymentResult, setPaymentResult] =   useState<{ status: 'success' | 'cancel'; ref: string | null; summary: any; k: string | null } | null>(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('payment');
     if (status !== 'success' && status !== 'cancel') return null;
     const ref = params.get('ref');
-    window.history.replaceState({}, '', window.location.pathname + window.location.hash);
-    return { status, ref };
+      let summary: any = null;
+      try {
+        const d = params.get('d');
+        if (d) summary = JSON.parse(decodeURIComponent(escape(atob(d.replace(/-/g, '+').replace(/_/g, '/')))));
+      } catch {
+        summary = null;
+      }
+      window.history.replaceState({}, '', window.location.pathname + window.location.hash);
+      return { status, ref, summary, k: params.get('k') };
   });
 
   // Initialiser la section basée sur l'URL ou 'accueil' par défaut
@@ -194,6 +203,10 @@ function App() {
         return <Pricing setCurrentSection={setCurrentSection} />;
       case 'contact':
         return <Contact />;
+      case 'espace-client':
+        return <ClientSpace goToReservation={() => handleSectionChange('reservation')} />;
+      case 'admin':
+        return <AdminPanel />;
       default:
         return (
           <>
@@ -216,6 +229,13 @@ function App() {
         <PaymentResult
           status={paymentResult.status}
           reference={paymentResult.ref}
+          summary={paymentResult.summary}
+          revealKey={paymentResult.k}
+          onOpenClientSpace={() => {
+            localStorage.removeItem(PENDING_PAYMENT_KEY);
+            setPaymentResult(null);
+            handleSectionChange('espace-client');
+          }}
           onClose={() => {
             localStorage.removeItem(PENDING_PAYMENT_KEY);
             setPaymentResult(null);
