@@ -24,7 +24,7 @@ Sujet: ${formData.subject}
 Message:
 ${formData.message}`;
 
-    const whatsappUrl = `https://wa.me/221710162323?text=${encodeURIComponent(whatsappMessage)}`;
+    const whatsappUrl = `https://wa.me/221778600482?text=${encodeURIComponent(whatsappMessage)}`;
     
     // Ouvrir WhatsApp
     window.open(whatsappUrl, '_blank');
@@ -66,7 +66,7 @@ ${formData.message}`;
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">Téléphone</h3>
                 <div className="text-gray-300 space-y-1">
-                  <p>+221 71 016 23 23</p>
+                  <p>+221 77 860 04 82</p>
                   <p>+221 33 825 79 51</p>
                 </div>
                 <p className="text-sm text-gray-400">Disponible 24h/24, 7j/7</p>

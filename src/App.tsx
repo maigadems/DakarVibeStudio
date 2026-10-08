@@ -217,7 +217,7 @@ function App() {
           status={paymentResult.status}
           reference={paymentResult.ref}
           onClose={() => {
-            sessionStorage.removeItem(PENDING_PAYMENT_KEY);
+            localStorage.removeItem(PENDING_PAYMENT_KEY);
             setPaymentResult(null);
           }}
         />

@@ -21,6 +21,7 @@ interface PayButtonProps {
 
 interface PaymentResponse {
   redirectUrl?: string;
+  ref_command?: string;
   message?: string;
   error?: boolean;
   amount: number;
@@ -71,7 +72,7 @@ const PayButton: React.FC<PayButtonProps> = ({ amount, description, name, date, 
       console.log('📥 Données reçues:', data);
 
       if (data.redirectUrl) {
-        sessionStorage.setItem('westaf_pending_payment', JSON.stringify({ amount, name, date }));
+        localStorage.setItem('westaf_pending_payment', JSON.stringify({ amount, name, date, reservationData, ref: data.ref_command }));
         console.log('✅ Redirection vers PayTech');
         // ✅ Redirection vers PayTech
         window.location.href = data.redirectUrl;

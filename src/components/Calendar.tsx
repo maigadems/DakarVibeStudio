@@ -352,7 +352,7 @@ const Calendar: React.FC = () => {
     setErrorMessage('');
   };
   const handleCall = () => {
-    window.location.href = 'tel:+221710162323';
+    window.location.href = 'tel:+221778600482';
   };
 
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -910,9 +910,9 @@ const Calendar: React.FC = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-green-400 mb-2">Réservation Confirmée !</h3>
+                  <h3 className="text-2xl font-bold text-orange-400 mb-2">Récapitulatif de votre réservation</h3>
                   <p className="text-gray-300 mb-6">
-                    Votre réservation a été enregistrée avec succès dans notre système.
+                    Votre réservation sera confirmée dès que le paiement sera effectué. Vérifiez les informations puis cliquez sur « Payer maintenant ».
                   </p>
                   {confirmedReservation?.serviceType === 'horaire' && (
                     <div className={`border rounded-lg p-4 mb-6 max-w-2xl mx-auto ${
