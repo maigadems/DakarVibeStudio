@@ -1,0 +1,22 @@
+# Vérification du site à chaque envoi sur GitHub : types TypeScript et build de production.
+name: Build du site
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Vérification des types
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Build de production
+        run: npm run build
