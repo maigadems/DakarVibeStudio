@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Check, Lock, Minus, Plus, ShieldCheck, Clock, CalendarDays } from 'lucide-react';
+import { ArrowRight, Check, Lock, Minus, Plus, ShieldCheck, CalendarDays } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAsync, useDocumentTitle } from '../../lib/hooks';
 import { cx, fDate, fcfa, phoneDisplay } from '../../lib/format';
-import type { DaySummary, Service, Slot } from '../../lib/types';
+import type { Service } from '../../lib/types';
 import { useAuth } from '../../context/AuthContext';
-import { SlotPicker } from '../../components/SlotPicker';
+import { HourCalendar } from '../../components/HourCalendar';
 import { Alert, Button, Field, Input, Spinner, Textarea, ErrorState } from '../../components/ui';
 import { priceLabel, serviceIcon } from '../../components/site/Sections';
 
@@ -32,7 +32,7 @@ const Booking: React.FC = () => {
 
   // L'état de la sélection est conservé dans l'URL : il survit à la connexion / inscription
   const service = services.find((s) => s.slug === params.get('service')) || null;
-  const hours = Math.max(service?.min_hours || 1, Math.min(Number(params.get('h')) || service?.min_hours || 1, service?.max_hours || 8));
+  const hours = Math.max(1, Math.min(Number(params.get('h')) || 1, service?.max_hours || 8));
   const tracks = Math.max(1, Math.min(Number(params.get('t')) || 1, 50));
   const start = params.get('start');
   const update = (patch: Record<string, string | null>) => {
@@ -71,11 +71,9 @@ const Booking: React.FC = () => {
   })();
   const deposit = isOrder ? plan.length > 1 : !!service?.allow_deposit && paymentOption === 'deposit';
   const amountNow = isOrder ? plan[0]?.amount || 0 : deposit ? Math.ceil((total * (service?.deposit_percent || 100)) / 100) : total;
-  const ready = !!service && (service.booking_mode !== 'slot' || !!start);
+  const ready = !!service && (service.booking_mode !== 'slot' || (!!start && hours >= (service.min_hours || 1)));
   const redirect = `/reservation?${params.toString()}`;
 
-  const loadDays = useMemo(() => () => api<{ days: DaySummary[] }>(`/public/availability/days?service_id=${service?.id}&hours=${hours}`, { auth: false }).then((r) => r.days), [service?.id, hours]);
-  const loadSlots = useMemo(() => (date: string) => api<{ slots: Slot[] }>(`/public/availability/slots?service_id=${service?.id}&hours=${hours}&date=${date}`, { auth: false }).then((r) => r.slots), [service?.id, hours]);
 
   const submit = async () => {
     if (!service) return;
@@ -126,34 +124,11 @@ const Booking: React.FC = () => {
               </Step>
 
               {service?.booking_mode === 'slot' && (
-                <Step n={2} title="Date et heure" done={!!start}
-                  aside={
-                    <div className="flex items-center gap-1 rounded-full border border-ink-600 p-1">
-                      <button type="button" aria-label="Moins d’heures" disabled={hours <= service.min_hours} onClick={() => update({ h: String(hours - 1), start: null })} className="rounded-full p-1.5 hover:bg-ink-700 disabled:opacity-30"><Minus className="h-4 w-4" /></button>
-                      <span className="min-w-[52px] text-center text-sm font-semibold tabular-nums"><Clock className="mr-1 inline h-3.5 w-3.5 text-ember" />{hours} h</span>
-                      <button type="button" aria-label="Plus d’heures" disabled={hours >= service.max_hours} onClick={() => update({ h: String(hours + 1), start: null })} className="rounded-full p-1.5 hover:bg-ink-700 disabled:opacity-30"><Plus className="h-4 w-4" /></button>
-                    </div>
-                  }>
-                  {/* Durée de la session : choix rapides (heures consécutives) */}
-                  <div className="mb-5">
-                    <p className="label">Durée de la session</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3, 4, 6, 8, service.max_hours]
-                        .filter((h, i, all) => h >= service.min_hours && h <= service.max_hours && all.indexOf(h) === i)
-                        .map((h) => (
-                          <button key={h} type="button" onClick={() => update({ h: String(h), start: null })}
-                            className={cx('rounded-full border px-4 py-2 text-sm font-semibold tabular-nums transition',
-                              h === hours ? 'border-ember bg-ember text-white shadow-lg shadow-ember/25' : 'border-ink-600 bg-ink-900 text-bone-200 hover:border-ember/60')}>
-                            {h === service.max_hours && h >= 10 ? `Journée · ${h} h` : `${h} h`}
-                          </button>
-                        ))}
-                    </div>
-                    <p className="mt-2 text-xs text-bone-600">
-                      {hours} heure{hours > 1 ? 's' : ''} consécutive{hours > 1 ? 's' : ''} · {fcfa((service.price || 0) * hours)}. Seules les heures de début où toute la session est libre sont proposées.
-                    </p>
-                  </div>
-                  <SlotPicker loadDays={loadDays} loadSlots={loadSlots} value={start} reloadKey={`${service.id}-${hours}-${reloadKey}`}
-                    onChange={(s, slot) => { update({ start: s }); setSlotLabel(slot?.label || null); }} />
+                <Step n={2} title="Date et heure" done={!!start && hours >= service.min_hours}>
+                  {/* Calendrier de l'ancienne version : plusieurs créneaux consécutifs = plusieurs heures */}
+                  <HourCalendar serviceId={service.id} minHours={service.min_hours} maxHours={service.max_hours} price={service.price || 0}
+                    start={start} hours={hours} reloadKey={reloadKey}
+                    onChange={(st, h) => { update({ start: st, h: String(h) }); setSlotLabel(null); }} />
                 </Step>
               )}
 
