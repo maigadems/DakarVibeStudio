@@ -204,7 +204,7 @@ export const StaffLogin: React.FC = () => {
         </div>
         {user?.role === 'client' && <Alert tone="info">Vous êtes connecté avec un compte client. <Link className="underline" to="/mon-espace">Aller à mon espace</Link></Alert>}
         {error && <Alert>{error}</Alert>}
-        <Field label="E-mail"><Input type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+        <Field label="E-mail ou identifiant"><Input type="text" required autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
         <Field label="Mot de passe"><PasswordInput required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
         <Button type="submit" size="lg" className="w-full" loading={busy}>Se connecter</Button>
         <p className="text-center text-xs text-bone-600"><Link to="/mot-de-passe-oublie" className="hover:text-bone">Mot de passe oublié ?</Link> · <Link to="/" className="hover:text-bone">Retour au site</Link></p>
