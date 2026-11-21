@@ -58,3 +58,14 @@
   .no-print { display: none !important; }
 }
 .no-scrollbar { scrollbar-width: none; }
+
+/* Halos lumineux fixes sur téléphone : l'animation d'un flou très large mobilise le processeur */
+@media (max-width: 767px) {
+  [class*='blur-['].animate-pulse { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*='blur-['].animate-pulse { animation: none; }
+}
+
+/* Écran de chargement (index.html) */
+@keyframes bootp { 0%, 100% { transform: scale(.94); opacity: .8; } 50% { transform: scale(1); opacity: 1; } }

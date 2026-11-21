@@ -7,7 +7,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: { react: ['react', 'react-dom', 'react-router-dom'] }
+        manualChunks(id) {
+          if (/node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return 'react';
+          if (id.includes('lucide-react')) return 'icons';
+        }
       }
     }
   },

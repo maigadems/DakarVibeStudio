@@ -4,6 +4,8 @@ import { applyAppIdentity } from './lib/pwa';
 import MaintenancePage from './components/MaintenancePage';
 import { PublicLayout } from './components/site/Chrome';
 import { RequireRole } from './components/Guards';
+import { StaffLayout, StaffLogin } from './pages/staff/StaffLayout';
+import { ForgotPassword, Login, Register, ResetPassword } from './pages/auth/AuthPages';
 import Home from './pages/public/Home';
 
 // Pages chargées à la demande (le téléphone ne télécharge que ce qui est affiché)
@@ -25,16 +27,10 @@ const NotFound = lazyNamed(() => import('./pages/public/ActionPages'), 'NotFound
 const PaymentAction = lazyNamed(() => import('./pages/public/ActionPages'), 'PaymentAction');
 const PaymentReturn = lazyNamed(() => import('./pages/public/ActionPages'), 'PaymentReturn');
 const PresenceAction = lazyNamed(() => import('./pages/public/ActionPages'), 'PresenceAction');
-const ForgotPassword = lazyNamed(() => import('./pages/auth/AuthPages'), 'ForgotPassword');
-const Login = lazyNamed(() => import('./pages/auth/AuthPages'), 'Login');
-const Register = lazyNamed(() => import('./pages/auth/AuthPages'), 'Register');
-const ResetPassword = lazyNamed(() => import('./pages/auth/AuthPages'), 'ResetPassword');
 const AccountDashboard = lazyNamed(() => import('./pages/account/Account'), 'AccountDashboard');
 const AccountLayout = lazyNamed(() => import('./pages/account/Account'), 'AccountLayout');
 const AccountProfile = lazyNamed(() => import('./pages/account/Account'), 'AccountProfile');
 const AccountReservations = lazyNamed(() => import('./pages/account/Account'), 'AccountReservations');
-const StaffLayout = lazyNamed(() => import('./pages/staff/StaffLayout'), 'StaffLayout');
-const StaffLogin = lazyNamed(() => import('./pages/staff/StaffLayout'), 'StaffLogin');
 const AdminCalendar = lazyNamed(() => import('./pages/admin/Overview'), 'AdminCalendar');
 const AdminDashboard = lazyNamed(() => import('./pages/admin/Overview'), 'AdminDashboard');
 const AdminPayments = lazyNamed(() => import('./pages/admin/Overview'), 'AdminPayments');
@@ -56,6 +52,26 @@ const EngineerCalendar = lazyNamed(() => import('./pages/engineer/Engineer'), 'E
 const EngineerHome = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerHome');
 const EngineerProfile = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerProfile');
 
+const prefetched = new Set<string>();
+const prefetchFor = (path: string) => {
+  const group = path.startsWith('/admin') ? 'admin' : path.startsWith('/ingenieur') ? 'engineer'
+    : /^\/(connexion|inscription|mon-espace|reservation|paiement)/.test(path) ? 'client' : null;
+  if (!group || prefetched.has(group)) return;
+  prefetched.add(group);
+  const run = () => {
+    if (group === 'admin') {
+      void import('./pages/admin/Overview'); void import('./pages/admin/Reservations'); void import('./pages/admin/Orders');
+      void import('./pages/shared/Invoices'); void import('./pages/admin/People'); void import('./pages/admin/Settings');
+    } else if (group === 'engineer') {
+      void import('./pages/engineer/Engineer');
+    } else {
+      void import('./pages/account/Account'); void import('./pages/auth/AuthPages'); void import('./pages/shared/Invoices');
+    }
+  };
+  const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+  if (w.requestIdleCallback) w.requestIdleCallback(run); else setTimeout(run, 1500);
+};
+
 // Mode maintenance : passer à true pour afficher uniquement la page de maintenance
 const MAINTENANCE = false;
 
@@ -63,6 +79,8 @@ const App: React.FC = () => {
   const { pathname } = useLocation();
   // Application « Westaf Admin » (noire) pour /admin et /ingenieur, « Westaf Records » (blanche) ailleurs
   useEffect(() => { applyAppIdentity(pathname); }, [pathname]);
+  // Pré-chargement en arrière-plan des pages qui suivent (après connexion) : ouverture immédiate ensuite
+  useEffect(() => { prefetchFor(pathname); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   if (MAINTENANCE) return <MaintenancePage />;
   return (
     <Suspense fallback={<PageLoader />}>
