@@ -67,8 +67,6 @@
   [class*='blur-['].animate-pulse { animation: none; }
 }
 
-/* Écran de chargement (index.html) */
-@keyframes bootp { 0%, 100% { transform: scale(.94); opacity: .8; } 50% { transform: scale(1); opacity: 1; } }
 
 /* Téléphone : animations décoratives en boucle coupées et grain retiré.
    Elles forçaient le téléphone à redessiner la page en continu (contenu affiché en retard). */
