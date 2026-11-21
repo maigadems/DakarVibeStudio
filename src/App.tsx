@@ -1,28 +1,60 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { applyAppIdentity } from './lib/pwa';
 import MaintenancePage from './components/MaintenancePage';
 import { PublicLayout } from './components/site/Chrome';
 import { RequireRole } from './components/Guards';
 import Home from './pages/public/Home';
-import Services from './pages/public/Services';
-import Studio from './pages/public/Studio';
-import EquipmentPage from './pages/public/EquipmentPage';
-import Contact from './pages/public/Contact';
-import Booking from './pages/public/Booking';
-import { NotFound, PaymentAction, PaymentReturn, PresenceAction } from './pages/public/ActionPages';
-import { ForgotPassword, Login, Register, ResetPassword } from './pages/auth/AuthPages';
-import { AccountDashboard, AccountLayout, AccountProfile, AccountReservations } from './pages/account/Account';
-import { StaffLayout, StaffLogin } from './pages/staff/StaffLayout';
-import { AdminCalendar, AdminDashboard, AdminPayments } from './pages/admin/Overview';
-import { AdminReservations } from './pages/admin/Reservations';
-import { AdminOrders } from './pages/admin/Orders';
-import { AdminProductions } from './pages/admin/Productions';
-import { AdminClients, AdminTeam } from './pages/admin/People';
-import { AdminEquipment, AdminGallery, AdminServices } from './pages/admin/Catalog';
-import { AdminAvailability, AdminSettings } from './pages/admin/Settings';
-import { InvoiceList, InvoiceView, PublicInvoice } from './pages/shared/Invoices';
-import { EngineerAbsences, EngineerCalendar, EngineerHome, EngineerProfile } from './pages/engineer/Engineer';
+
+// Pages chargées à la demande (le téléphone ne télécharge que ce qui est affiché)
+function lazyNamed<T extends Record<string, any>, K extends keyof T>(load: () => Promise<T>, name: K) {
+  return lazy(() => load().then((mod) => ({ default: mod[name] as React.ComponentType<any> })));
+}
+const PageLoader: React.FC = () => (
+  <div className="flex min-h-[60vh] items-center justify-center" aria-label="Chargement">
+    <span className="h-8 w-8 animate-spin rounded-full border-2 border-ember/30 border-t-ember" />
+  </div>
+);
+
+const Services = lazy(() => import('./pages/public/Services'));
+const Studio = lazy(() => import('./pages/public/Studio'));
+const EquipmentPage = lazy(() => import('./pages/public/EquipmentPage'));
+const Contact = lazy(() => import('./pages/public/Contact'));
+const Booking = lazy(() => import('./pages/public/Booking'));
+const NotFound = lazyNamed(() => import('./pages/public/ActionPages'), 'NotFound');
+const PaymentAction = lazyNamed(() => import('./pages/public/ActionPages'), 'PaymentAction');
+const PaymentReturn = lazyNamed(() => import('./pages/public/ActionPages'), 'PaymentReturn');
+const PresenceAction = lazyNamed(() => import('./pages/public/ActionPages'), 'PresenceAction');
+const ForgotPassword = lazyNamed(() => import('./pages/auth/AuthPages'), 'ForgotPassword');
+const Login = lazyNamed(() => import('./pages/auth/AuthPages'), 'Login');
+const Register = lazyNamed(() => import('./pages/auth/AuthPages'), 'Register');
+const ResetPassword = lazyNamed(() => import('./pages/auth/AuthPages'), 'ResetPassword');
+const AccountDashboard = lazyNamed(() => import('./pages/account/Account'), 'AccountDashboard');
+const AccountLayout = lazyNamed(() => import('./pages/account/Account'), 'AccountLayout');
+const AccountProfile = lazyNamed(() => import('./pages/account/Account'), 'AccountProfile');
+const AccountReservations = lazyNamed(() => import('./pages/account/Account'), 'AccountReservations');
+const StaffLayout = lazyNamed(() => import('./pages/staff/StaffLayout'), 'StaffLayout');
+const StaffLogin = lazyNamed(() => import('./pages/staff/StaffLayout'), 'StaffLogin');
+const AdminCalendar = lazyNamed(() => import('./pages/admin/Overview'), 'AdminCalendar');
+const AdminDashboard = lazyNamed(() => import('./pages/admin/Overview'), 'AdminDashboard');
+const AdminPayments = lazyNamed(() => import('./pages/admin/Overview'), 'AdminPayments');
+const AdminReservations = lazyNamed(() => import('./pages/admin/Reservations'), 'AdminReservations');
+const AdminOrders = lazyNamed(() => import('./pages/admin/Orders'), 'AdminOrders');
+const AdminProductions = lazyNamed(() => import('./pages/admin/Productions'), 'AdminProductions');
+const AdminClients = lazyNamed(() => import('./pages/admin/People'), 'AdminClients');
+const AdminTeam = lazyNamed(() => import('./pages/admin/People'), 'AdminTeam');
+const AdminEquipment = lazyNamed(() => import('./pages/admin/Catalog'), 'AdminEquipment');
+const AdminGallery = lazyNamed(() => import('./pages/admin/Catalog'), 'AdminGallery');
+const AdminServices = lazyNamed(() => import('./pages/admin/Catalog'), 'AdminServices');
+const AdminAvailability = lazyNamed(() => import('./pages/admin/Settings'), 'AdminAvailability');
+const AdminSettings = lazyNamed(() => import('./pages/admin/Settings'), 'AdminSettings');
+const InvoiceList = lazyNamed(() => import('./pages/shared/Invoices'), 'InvoiceList');
+const InvoiceView = lazyNamed(() => import('./pages/shared/Invoices'), 'InvoiceView');
+const PublicInvoice = lazyNamed(() => import('./pages/shared/Invoices'), 'PublicInvoice');
+const EngineerAbsences = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerAbsences');
+const EngineerCalendar = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerCalendar');
+const EngineerHome = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerHome');
+const EngineerProfile = lazyNamed(() => import('./pages/engineer/Engineer'), 'EngineerProfile');
 
 // Mode maintenance : passer à true pour afficher uniquement la page de maintenance
 const MAINTENANCE = false;
@@ -33,6 +65,7 @@ const App: React.FC = () => {
   useEffect(() => { applyAppIdentity(pathname); }, [pathname]);
   if (MAINTENANCE) return <MaintenancePage />;
   return (
+    <Suspense fallback={<PageLoader />}>
     <Routes>
       {/* Site public */}
       <Route element={<PublicLayout />}>
@@ -97,6 +130,7 @@ const App: React.FC = () => {
         <Route path="*" element={<Navigate to="/ingenieur" replace />} />
       </Route>
     </Routes>
+    </Suspense>
   );
 };
 

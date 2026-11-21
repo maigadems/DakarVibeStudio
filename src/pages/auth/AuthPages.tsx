@@ -15,7 +15,7 @@ export const AuthShell: React.FC<{ title: string; subtitle?: React.ReactNode; ch
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden overflow-hidden lg:block">
         <div className="absolute inset-0 bg-ink-900" />
-        <img src="/WestAf Record-15.jpg" alt="" className="absolute left-1/2 top-1/2 w-[85%] -translate-x-1/2 -translate-y-1/2 opacity-25 mix-blend-screen" />
+        <img src="/westaf-studio-1200.jpg" alt="" className="absolute left-1/2 top-1/2 w-[85%] -translate-x-1/2 -translate-y-1/2 opacity-25 mix-blend-screen" />
         <div className="absolute inset-0 bg-gradient-to-br from-ink/20 via-ink/50 to-ink" />
         <div className="absolute -left-20 bottom-0 h-96 w-96 rounded-full bg-ember/25 blur-[120px]" />
         <div className="relative flex h-full flex-col justify-between p-12">

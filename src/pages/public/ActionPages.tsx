@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { FileText, CheckCircle2, XCircle, Banknote, CreditCard, CalendarClock, CalendarCheck2, Hourglass, Home as HomeIcon } from 'lucide-react';
+import { MessageCircle, FileText, CheckCircle2, XCircle, Banknote, CreditCard, CalendarClock, CalendarCheck2, Hourglass, Home as HomeIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useDocumentTitle } from '../../lib/hooks';
 import { fDate, fRange, fcfa } from '../../lib/format';
 import { useAuth } from '../../context/AuthContext';
+import { useConfig } from '../../context/ConfigContext';
 import { Alert, Button, Spinner } from '../../components/ui';
 import type { Milestone, Reservation } from '../../lib/types';
 import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
@@ -17,11 +18,45 @@ const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   </div>
 );
 
+// Message « Confirmer par WhatsApp » de l'ancienne version, envoyé par le client au studio
+const fmtN = (n?: number | null) => Number(n || 0).toLocaleString('fr-FR');
+const buildWhatsAppMessage = (r: Reservation | null, reference: string | null) => {
+  if (!r) return `Bonjour, je viens d'effectuer le paiement de ma réservation.${reference ? ` Réf : ${reference}` : ''}`;
+  const lines = [
+    'Bonjour Westaf Records,',
+    'Je confirme ma réservation après paiement :',
+    '',
+    `👤 Nom : ${r.nom}`,
+    `📞 Téléphone : ${r.telephone}`,
+    ...(r.email ? [`✉️ Email : ${r.email}`] : []),
+    `🎙️ Service choisi : ${r.service_name}`
+  ];
+  if (r.start_at) {
+    lines.push(`📅 Date : ${fDate(r.start_at)}`);
+    lines.push(`🕒 Créneau : ${fRange(r.start_at, r.end_at)}`);
+    if (r.duree_heures) lines.push(`⏱️ Durée : ${r.duree_heures} heure(s)`);
+  } else if (r.nombre_titres) {
+    lines.push(`🎵 Nombre de titres : ${r.nombre_titres}`);
+  }
+  lines.push('');
+  lines.push(`💰 Montant total : ${fmtN(r.montant_total)} FCFA`);
+  lines.push(`✅ Montant payé : ${fmtN(r.montant_paye)} FCFA`);
+  if (r.solde) lines.push(`Reste à payer : ${fmtN(r.solde)} FCFA`);
+  if (reference) lines.push(`Réf : ${reference}`);
+  return lines.join('\n');
+};
+const waLink = (phone: string | null | undefined, text: string) => {
+  let d = String(phone || '').replace(/\D/g, '');
+  if (d.length === 9) d = `221${d}`;
+  return d ? `https://wa.me/${d}?text=${encodeURIComponent(text)}` : null;
+};
+
 // ------------------------------------------------------------------ Retour PayTech
 export const PaymentReturn: React.FC = () => {
   useDocumentTitle('Paiement');
   const [params] = useSearchParams();
   const { user } = useAuth();
+  const { settings } = useConfig();
   const success = params.get('status') === 'success';
   const resId = params.get('r');
   const [res, setRes] = useState<Reservation | null>(null);
@@ -83,6 +118,15 @@ export const PaymentReturn: React.FC = () => {
         </div>
       )}
       {res && !confirmed && tries >= 10 && <Alert tone="warning" className="mt-5 text-left">La confirmation de PayTech prend plus de temps que prévu. Elle apparaîtra dans votre espace dès réception.</Alert>}
+      {(() => {
+        const url = waLink(settings.contact_phone, buildWhatsAppMessage(res, params.get('ref')));
+        return url ? (
+          <a href={url} target="_blank" rel="noopener noreferrer"
+            className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-green-600 py-3 font-semibold text-white hover:bg-green-700">
+            <MessageCircle size={18} /> Confirmer par WhatsApp
+          </a>
+        ) : null;
+      })()}
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Button to="/mon-espace/reservations">Voir mes réservations</Button>
         <Button to="/" variant="outline" icon={<HomeIcon className="h-4 w-4" />}>Accueil</Button>

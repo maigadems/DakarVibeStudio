@@ -64,7 +64,7 @@ export const LOGO_VARIANTS: LogoVariant[] = ['orbit', 'pulse', 'float', 'shine',
 
 const Mark: React.FC<{ className?: string }> = ({ className }) => (
   // Logo sur fond noir : le mode « screen » rend le noir transparent sur les fonds sombres
-  <img src="/WestAf Record-15.jpg" alt="" aria-hidden draggable={false} className={cx('pointer-events-none select-none mix-blend-screen [mask-image:radial-gradient(circle,black_48%,transparent_70%)]', className)} />
+  <img src="/westaf-studio-480.jpg" alt="" aria-hidden draggable={false} decoding="async" className={cx('pointer-events-none select-none mix-blend-screen [mask-image:radial-gradient(circle,black_48%,transparent_70%)]', className)} />
 );
 
 /**

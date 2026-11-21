@@ -87,7 +87,7 @@ const Home: React.FC = () => {
           <div className="absolute left-[10%] top-1/4 h-[28rem] w-[28rem] animate-pulse rounded-full bg-ember/20 blur-[130px]" />
           <div className="absolute bottom-[10%] right-[8%] h-[26rem] w-[26rem] animate-pulse rounded-full bg-crimson/20 blur-[130px] [animation-delay:1s]" />
           <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-amberish/10 blur-[110px] [animation-delay:.5s]" />
-          <img src="/WestAf Record-15.jpg" alt="" className="absolute -right-24 top-1/2 hidden w-[46rem] -translate-y-1/2 opacity-[0.07] mix-blend-screen lg:block" />
+          <img src="/westaf-studio-1200.jpg" alt="" className="absolute -right-24 top-1/2 hidden w-[46rem] -translate-y-1/2 opacity-[0.07] mix-blend-screen lg:block" />
         </div>
 
         <div className="container-x pb-16 pt-32 text-center">
@@ -164,7 +164,7 @@ const Home: React.FC = () => {
             <div className="reveal relative" style={{ transitionDelay: '120ms' }}>
               <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-ember/20 via-transparent to-crimson/20 blur-2xl" />
               <div className="overflow-hidden rounded-[2rem] border border-ember/30 shadow-2xl">
-                <img src="/WestAf Record-15.jpg" alt="Westaf Records" loading="lazy" className="aspect-square w-full object-cover sm:aspect-[4/3]" />
+                <img src="/westaf-studio-1200.jpg" alt="Westaf Records" loading="lazy" className="aspect-square w-full object-cover sm:aspect-[4/3]" />
               </div>
             </div>
           </div>
