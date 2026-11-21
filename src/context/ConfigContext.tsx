@@ -29,13 +29,24 @@ const FALLBACK: PublicSettings = {
   reschedule_limit_minutes: '120'
 };
 
+const CONFIG_CACHE = 'westaf_config_cache';
 const ConfigContext = createContext<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, vapidPublicKey: null, loaded: false });
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [value, setValue] = useState<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, vapidPublicKey: null, loaded: false });
+  const [value, setValue] = useState<ConfigValue>(() => {
+    try {
+      const c = JSON.parse(localStorage.getItem(CONFIG_CACHE) || 'null');
+      if (c) return { ...c, settings: { ...FALLBACK, ...c.settings }, loaded: true };
+    } catch { /* indisponible */ }
+    return { settings: FALLBACK, openingHours: [], googleClientId: null, vapidPublicKey: null, loaded: false };
+  });
   useEffect(() => {
     api<{ settings: PublicSettings; openingHours: OpeningDay[]; googleClientId: string | null; vapidPublicKey: string | null }>('/public/config', { auth: false })
-      .then((r) => setValue({ settings: { ...FALLBACK, ...Object.fromEntries(Object.entries(r.settings).filter(([, v]) => v !== null && v !== '')) } as PublicSettings, openingHours: r.openingHours, googleClientId: r.googleClientId, vapidPublicKey: r.vapidPublicKey || null, loaded: true }))
+      .then((r) => {
+        const next = { settings: { ...FALLBACK, ...Object.fromEntries(Object.entries(r.settings).filter(([, v]) => v !== null && v !== '')) } as PublicSettings, openingHours: r.openingHours, googleClientId: r.googleClientId, vapidPublicKey: r.vapidPublicKey || null, loaded: true };
+        setValue(next);
+        try { localStorage.setItem(CONFIG_CACHE, JSON.stringify(next)); } catch { /* indisponible */ }
+      })
       .catch(() => setValue((v) => ({ ...v, loaded: true })));
   }, []);
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;

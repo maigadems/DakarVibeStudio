@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { api, getToken, setToken, setUnauthorizedHandler } from '../lib/api';
 import type { Role, User } from '../lib/types';
+import { clearDataCache } from '../lib/hooks';
 
 interface Session { token: string; user: User }
 
@@ -26,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [ready, setReady] = useState(false);
 
   const logout = useCallback(() => {
+    clearDataCache(); // données de ce compte retirées de l’appareil
     setToken(null);
     setUser(null);
   }, []);
