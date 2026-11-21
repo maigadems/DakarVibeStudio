@@ -18,7 +18,8 @@ export default {
       },
       letterSpacing: { widest2: '0.32em' },
       keyframes: {
-        'fade-up': { '0%': { opacity: '0', transform: 'translateY(18px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        // Contenu visible dès l'affichage : seul un léger glissement, jamais de moment invisible
+        'fade-up': { '0%': { opacity: '1', transform: 'translateY(8px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
         'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         'scale-in': { '0%': { opacity: '0', transform: 'scale(.96)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
         marquee: { '0%': { transform: 'translateX(0)' }, '100%': { transform: 'translateX(-50%)' } },
@@ -37,7 +38,7 @@ export default {
         'zoom-in': { '0%': { opacity: '0', transform: 'scale(.92)' }, '100%': { opacity: '1', transform: 'scale(1)' } }
       },
       animation: {
-        'fade-up': 'fade-up .7s cubic-bezier(.2,.7,.2,1) both',
+        'fade-up': 'fade-up .45s cubic-bezier(.2,.7,.2,1) both',
         'fade-in': 'fade-in .4s ease both',
         'scale-in': 'scale-in .25s cubic-bezier(.2,.7,.2,1) both',
         marquee: 'marquee 40s linear infinite',
