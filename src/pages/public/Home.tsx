@@ -7,7 +7,8 @@ import { api } from '../../lib/api';
 import { useAsync, useDocumentTitle, useReveal } from '../../lib/hooks';
 import { useConfig } from '../../context/ConfigContext';
 import type { Equipment, GalleryPhoto, Service } from '../../lib/types';
-import { EquipmentCard, PLAYLIST_URL, SectionTitle, ServiceCard, TrackList } from '../../components/site/Sections';
+import { EquipmentCard, SectionTitle, ServiceCard } from '../../components/site/Sections';
+import { ProductionCard, type Production } from '../../components/Productions';
 import { Lightbox } from '../../components/Lightbox';
 import { PhotoMasonry } from '../../components/PhotoMasonry';
 import { LogoArt } from '../../components/media';
@@ -47,12 +48,13 @@ const Home: React.FC = () => {
   const [viewer, setViewer] = useState<{ items: { url: string; title?: string | null; description?: string | null }[]; index: number } | null>(null);
 
   const { data } = useAsync(async () => {
-    const [s, e, g] = await Promise.all([
+    const [s, e, g, pr] = await Promise.all([
       api<{ services: Service[] }>('/public/services', { auth: false }),
       api<{ equipment: Equipment[] }>('/public/equipment', { auth: false }),
-      api<{ photos: GalleryPhoto[] }>('/public/gallery', { auth: false })
+      api<{ photos: GalleryPhoto[] }>('/public/gallery', { auth: false }),
+      api<{ productions: Production[] }>('/public/productions', { auth: false }).catch(() => ({ productions: [] as Production[] }))
     ]);
-    return { services: s.services, equipment: e.equipment, gallery: g.photos };
+    return { services: s.services, equipment: e.equipment, gallery: g.photos, productions: pr.productions };
   }, []);
 
   // Ancien retour PayTech (?payment=...) : redirigé vers la nouvelle page de retour
@@ -62,6 +64,8 @@ const Home: React.FC = () => {
   }, [navigate]);
 
   const services = data?.services || [];
+  // Les productions mises en avant d'abord, puis les plus récentes (ordre défini par Jeuss)
+  const productions = [...(data?.productions || [])].sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
   const bookable = services.filter((s) => s.booking_mode !== 'quote');
   const featuredServices = (bookable.filter((s) => s.is_featured).length ? bookable.filter((s) => s.is_featured) : bookable).slice(0, 3);
   const equipment = useMemo(() => data?.equipment || [], [data]);
@@ -266,26 +270,23 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* ============================================================ COMPOSITIONS */}
-      <section className="border-t border-ink-600/60 bg-ink-900 py-24 sm:py-32">
-        <div className="container-x grid grid-cols-1 gap-14 lg:grid-cols-12">
-          <div className="lg:col-span-5">
-            <p className="eyebrow reveal">Productions</p>
-            <h2 className="reveal mt-4 text-4xl font-semibold leading-[1.05] sm:text-5xl">Nos Compositions <span className="text-gradient">Musicales</span></h2>
-            <p className="reveal mt-6 leading-relaxed text-bone-400">Découvrez quelques-unes de nos compositions musicales réalisées dans notre studio</p>
-            <div className="reveal mt-10 rounded-3xl border border-ember/20 bg-ink-800/70 p-6">
-              <p className="font-display text-lg font-semibold">Découvrez Toutes Nos Productions</p>
-              <p className="mt-2 text-sm text-bone-400">Écoutez l’intégralité de nos créations musicales dans notre playlist officielle</p>
-              <a href={PLAYLIST_URL} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-ember-400 hover:text-ember">
-                Disponible sur Apple Music <ExternalLink className="h-4 w-4" />
-              </a>
+      {/* ============================================================ DERNIÈRES PRODUCTIONS (gérées dans Admin → Productions) */}
+      {productions.length > 0 && (
+        <section className="border-t border-ink-600/60 bg-ink-900 py-24 sm:py-32">
+          <div className="container-x">
+            <SectionTitle eyebrow="Productions" title={<>Nos dernières <span className="text-gradient">productions</span></>}
+              text="Découvrez quelques-unes de nos compositions musicales réalisées dans notre studio"
+              action={settings.productions_playlist_url ? (
+                <a href={settings.productions_playlist_url} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-2 text-sm font-semibold hover:text-ember">
+                  Découvrez toutes nos productions <ExternalLink className="h-4 w-4" />
+                </a>
+              ) : undefined} />
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {productions.slice(0, 6).map((p, i) => <ProductionCard key={p.id} p={p} index={i} />)}
             </div>
           </div>
-          <div className="lg:col-span-7">
-            <TrackList />
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ============================================================ CONTACT / CTA */}
       <section className="py-24 sm:py-32">

@@ -70,6 +70,9 @@ export async function downloadFile(path: string, filename: string): Promise<void
     if (res.status === 401 && token) onUnauthorized?.();
     throw new ApiError(res.status, data.message || 'Téléchargement impossible');
   }
+  // Nom de fichier fourni par le serveur (ex. facture-WR-2026-0001.pdf) si disponible
+  const fromServer = /filename="?([^";]+)"?/.exec(res.headers.get('Content-Disposition') || '')?.[1];
+  if (fromServer) filename = fromServer;
   const url = URL.createObjectURL(await res.blob());
   const a = document.createElement('a');
   a.href = url;

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, XCircle, Banknote, CreditCard, CalendarClock, CalendarCheck2, Hourglass, Home as HomeIcon } from 'lucide-react';
+import { FileText, CheckCircle2, XCircle, Banknote, CreditCard, CalendarClock, CalendarCheck2, Hourglass, Home as HomeIcon } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useDocumentTitle } from '../../lib/hooks';
 import { fDate, fRange, fcfa } from '../../lib/format';
 import { useAuth } from '../../context/AuthContext';
 import { Alert, Button, Spinner } from '../../components/ui';
-import type { Reservation } from '../../lib/types';
+import type { Milestone, Reservation } from '../../lib/types';
+import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
+import { Linkify, OrderSteps } from '../../components/OrderSteps';
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="relative flex min-h-[80vh] items-center justify-center px-4 pb-20 pt-32">
@@ -70,6 +72,16 @@ export const PaymentReturn: React.FC = () => {
       ) : (
         <p className="mt-3 text-bone-400">Votre réservation sera confirmée dès la validation du paiement par PayTech. Vous recevrez une confirmation sur WhatsApp.</p>
       )}
+      {res?.invoice_id && confirmed && (
+        <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-ink-600 bg-ink-900 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold"><FileText className="h-4 w-4 text-ember" />Votre facture est prête</p>
+          <p className="text-xs text-bone-600">Elle vous a aussi été envoyée par WhatsApp et par e-mail.</p>
+          <div className="mt-1 flex flex-wrap justify-center gap-2">
+            <DownloadInvoiceButton scope="client" id={res.invoice_id} number={`${res.invoice_id}`} label="Télécharger la facture" />
+            <Button size="sm" variant="ghost" to={`/mon-espace/factures/${res.invoice_id}`}>Voir</Button>
+          </div>
+        </div>
+      )}
       {res && !confirmed && tries >= 10 && <Alert tone="warning" className="mt-5 text-left">La confirmation de PayTech prend plus de temps que prévu. Elle apparaîtra dans votre espace dès réception.</Alert>}
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
         <Button to="/mon-espace/reservations">Voir mes réservations</Button>
@@ -83,6 +95,9 @@ interface ActionSummary {
   id: string; first_name: string; service_name: string; start_at: string | null; end_at: string | null; statut: string;
   session_status: string; presence_status: string; payment_status: string; amount_due: number; montant_total: number;
   can_reschedule_online: boolean; reschedule_limit_minutes: number;
+  is_order?: boolean; nombre_titres?: number | null;
+  milestone?: { id: number; label: string; amount: number; percent: number; status: string; deliverable_note: string | null } | null;
+  milestones?: { label: string; percent: number; amount: number; status: string }[];
 }
 
 const useAction = (token?: string) => {
@@ -115,6 +130,56 @@ export const PaymentAction: React.FC = () => {
 
   if (error) return <Shell><XCircle className="mx-auto h-12 w-12 text-[#F07A7A]" /><p className="mt-4">{error}</p></Shell>;
   if (!data) return <Shell><Spinner /></Shell>;
+
+  // Commande payée par étapes (mixage, mastering…)
+  if (data.is_order) {
+    const m = data.milestone;
+    const allPaid = (data.milestones || []).every((x) => x.status === 'paye');
+    return (
+      <Shell>
+        <p className="eyebrow">Votre commande</p>
+        <h1 className="mt-3 text-2xl font-semibold">Bonjour {data.first_name}</h1>
+        <p className="mt-2 text-bone-400">{data.service_name} · {data.nombre_titres || 1} titre{(data.nombre_titres || 1) > 1 ? 's' : ''}</p>
+        {m?.deliverable_note && (
+          <div className="mt-6 rounded-2xl border border-ink-600 bg-ink-900 p-4 text-left text-sm">
+            <p className="text-xs uppercase tracking-wider text-bone-600">Livrables</p>
+            <p className="mt-1 text-bone-200"><Linkify text={m.deliverable_note} /></p>
+          </div>
+        )}
+        {m?.status === 'demande' && data.statut !== 'annulee' ? (
+          <>
+            <div className="mt-6 rounded-2xl border border-ink-600 bg-ink-900 p-6">
+              <p className="text-xs uppercase tracking-wider text-bone-600">{m.label} · {m.percent} %</p>
+              <p className="mt-1 font-display text-4xl font-semibold text-gradient">{fcfa(m.amount)}</p>
+            </div>
+            {err && <Alert className="mt-5 text-left">{err}</Alert>}
+            <div className="mt-6 grid gap-3">
+              <Button size="lg" onClick={online} loading={busy === 'online'} disabled={!!busy} icon={<CreditCard className="h-4 w-4" />}>Payer en ligne</Button>
+              <Button size="lg" variant="outline" onClick={cash} loading={busy === 'cash'} disabled={!!busy} icon={<Banknote className="h-4 w-4" />}>Je paie en espèces au studio</Button>
+            </div>
+          </>
+        ) : m?.status === 'en_attente_validation' ? (
+          <div className="mt-6 rounded-2xl border border-sky-400/30 bg-sky-400/10 p-6">
+            <Banknote className="mx-auto h-10 w-10 text-sky-300" />
+            <p className="mt-3 font-semibold">Paiement en espèces annoncé</p>
+            <p className="mt-1 text-sm text-bone-200">Réglez {fcfa(m.amount)} au studio : l’équipe confirmera la réception.</p>
+          </div>
+        ) : allPaid ? (
+          <div className="mt-6 rounded-2xl border border-sage/30 bg-sage/10 p-6">
+            <CheckCircle2 className="mx-auto h-10 w-10 text-sage" />
+            <p className="mt-3 font-semibold">Commande entièrement réglée, merci !</p>
+          </div>
+        ) : (
+          <Alert tone="info" className="mt-6">Aucun paiement n’est demandé pour le moment. Le studio vous préviendra à la prochaine étape.</Alert>
+        )}
+        {(data.milestones || []).length > 1 && (
+          <div className="mt-8 text-left">
+            <OrderSteps compact milestones={(data.milestones || []).map((x, i) => ({ ...x, id: i, position: i + 1, kind: 'acompte', deliverable_note: null, requested_at: null, paid_at: null } as Milestone))} />
+          </div>
+        )}
+      </Shell>
+    );
+  }
 
   return (
     <Shell>

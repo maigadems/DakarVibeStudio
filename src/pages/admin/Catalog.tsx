@@ -30,7 +30,7 @@ const ServiceForm: React.FC<{ service: Service | null; onDone: () => void }> = (
   const [f, setF] = useState({
     name: service?.name || '', tagline: service?.tagline || '', description: service?.description || '', booking_mode: service?.booking_mode || 'quote',
     price: service?.price?.toString() || '', price_unit: service?.price_unit || '', min_hours: String(service?.min_hours || 1), max_hours: String(service?.max_hours || 8),
-    allow_deposit: !!service?.allow_deposit, deposit_percent: String(service?.deposit_percent || 50), features: (service?.features || []).join('\n'),
+    allow_deposit: !!service?.allow_deposit, deposit_percent: String(service?.deposit_percent || 50), milestone_percent: String(service?.milestone_percent ?? 0), features: (service?.features || []).join('\n'),
     is_active: service ? service.is_active : true, is_featured: !!service?.is_featured, sort_order: String(service?.sort_order ?? 0)
   });
   const [image, setImage] = useState<File | null>(null);
@@ -43,7 +43,8 @@ const ServiceForm: React.FC<{ service: Service | null; onDone: () => void }> = (
     setBusy(true); setError(null);
     try {
       if (image) checkFiles([image]);
-      const body = { ...f, price: f.price === '' ? null : Number(f.price), min_hours: Number(f.min_hours), max_hours: Number(f.max_hours), deposit_percent: Number(f.deposit_percent), sort_order: Number(f.sort_order) };
+      const body = { ...f, price: f.price === '' ? null : Number(f.price), min_hours: Number(f.min_hours), max_hours: Number(f.max_hours), deposit_percent: Number(f.deposit_percent),
+        milestone_percent: f.booking_mode === 'per_track' ? Number(f.milestone_percent) || 0 : 0, allow_deposit: f.booking_mode === 'per_track' ? true : f.allow_deposit, sort_order: Number(f.sort_order) };
       const r = service
         ? await api<{ service: Service }>(`/admin/services/${service.id}`, { method: 'PATCH', body })
         : await api<{ service: Service }>('/admin/services', { method: 'POST', body });
@@ -77,7 +78,18 @@ const ServiceForm: React.FC<{ service: Service | null; onDone: () => void }> = (
             <Field label="Durée maximale (h)"><Input type="number" min={1} max={16} value={f.max_hours} onChange={set('max_hours')} /></Field>
           </>
         )}
-        {f.booking_mode !== 'quote' && (
+        {f.booking_mode === 'per_track' && (
+          <div className="rounded-2xl border border-ink-600 bg-ink-900 p-4 sm:col-span-2">
+            <p className="label">Paiement par étapes</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="À la commande (%)"><Input type="number" min={1} max={100} value={f.deposit_percent} onChange={set('deposit_percent')} /></Field>
+              <Field label="Aux premiers livrables (%)"><Input type="number" min={0} max={99} value={f.milestone_percent} onChange={set('milestone_percent')} /></Field>
+              <Field label="À la livraison finale"><Input disabled value={`${Math.max(0, 100 - (Number(f.deposit_percent) || 0) - (Number(f.milestone_percent) || 0))} %`} /></Field>
+            </div>
+            <p className="mt-2 text-xs text-bone-600">S’applique aux nouvelles commandes. L’échéancier d’une commande en cours s’ajuste depuis Admin → Commandes.</p>
+          </div>
+        )}
+        {f.booking_mode === 'slot' && (
           <div className="flex items-end gap-4 sm:col-span-2">
             <Toggle checked={f.allow_deposit} onChange={(v) => setF({ ...f, allow_deposit: v })} label="Acompte autorisé" />
             {f.allow_deposit && <Field label="Acompte (%)"><Input type="number" min={1} max={100} value={f.deposit_percent} onChange={set('deposit_percent')} className="w-28" /></Field>}

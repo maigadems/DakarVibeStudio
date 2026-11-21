@@ -4,7 +4,9 @@ import { CalendarClock, CalendarPlus, CreditCard, FileText, Banknote, LayoutDash
 import { api } from '../../lib/api';
 import { useAsync, useDocumentTitle } from '../../lib/hooks';
 import { cx, fDate, fDateShort, fRange, fTime, fcfa, phoneDisplay, studioNow } from '../../lib/format';
-import { PAYMENT, SESSION, STATUT } from '../../lib/labels';
+import { PAYMENT, PRODUCTION, SESSION, STATUT } from '../../lib/labels';
+import { OrderSteps } from '../../components/OrderSteps';
+import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
 import type { DaySummary, Reservation, Slot, User } from '../../lib/types';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -12,6 +14,7 @@ import { Header } from '../../components/site/Chrome';
 import { Alert, Badge, Button, Confirm, Empty, ErrorState, Field, Input, Modal, PageHeader, Spinner, StatCard, StatusBadge, Tabs } from '../../components/ui';
 import { SlotPicker } from '../../components/SlotPicker';
 import { ForcePasswordChange } from '../../components/Guards';
+import { AppPrompts, PushToggle } from '../../components/AppPrompts';
 import { PasswordInput } from '../auth/AuthPages';
 
 // ------------------------------------------------------------------ Mise en page
@@ -53,7 +56,7 @@ export const AccountLayout: React.FC = () => {
               <Button to="/reservation" className="mt-5 hidden w-full lg:flex" icon={<CalendarPlus className="h-4 w-4" />}>Nouvelle réservation</Button>
             </div>
           </aside>
-          <main className="min-w-0 lg:col-span-9"><Outlet /></main>
+          <main className="min-w-0 lg:col-span-9"><AppPrompts app="client" /><Outlet /></main>
         </div>
       </div>
       <ForcePasswordChange />
@@ -162,6 +165,9 @@ const ReservationCard: React.FC<{ r: Reservation; onReschedule: () => void; onCh
     try { window.location.href = (await api<{ redirectUrl: string }>(`/client/reservations/${r.id}/${path}`, { method: 'POST' })).redirectUrl; }
     catch (e: any) { toast(e.message, 'error'); setBusy(null); }
   };
+  const order = r.order && r.order.milestones.length ? r.order : null;
+  const due = order?.milestones.find((m) => m.id === order.current_id) || null;
+  const dueAmount = due ? due.amount : r.solde;
   const lateRule = r.booking_mode === 'slot' && r.statut === 'confirmee' && !r.can_reschedule && !isPast(r) && !['en_cours'].includes(r.session_status);
 
   return (
@@ -196,19 +202,29 @@ const ReservationCard: React.FC<{ r: Reservation; onReschedule: () => void; onCh
         </div>
       </div>
 
-      {(r.can_reschedule || r.can_pay_balance || r.can_resume_payment || lateRule) && (
+      {(r.can_reschedule || r.can_pay_balance || r.can_resume_payment || lateRule || r.invoice_id) && (
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink-600/70 pt-4">
           {r.can_resume_payment && <Button size="sm" loading={busy === 'resume-payment'} onClick={() => pay('resume-payment')} icon={<CreditCard className="h-4 w-4" />}>Finaliser le paiement</Button>}
           {r.can_reschedule && <Button size="sm" variant="outline" onClick={onReschedule} icon={<CalendarClock className="h-4 w-4" />}>Reporter</Button>}
-          {r.can_pay_balance && <Button size="sm" variant="subtle" loading={busy === 'pay-balance'} onClick={() => pay('pay-balance')} icon={<CreditCard className="h-4 w-4" />}>Régler le solde</Button>}
+          {r.can_pay_balance && <Button size="sm" variant={due ? 'primary' : 'subtle'} loading={busy === 'pay-balance'} onClick={() => pay('pay-balance')} icon={<CreditCard className="h-4 w-4" />}>{due ? `Payer « ${due.label} » · ${fcfa(due.amount)}` : 'Régler le solde'}</Button>}
           {r.can_pay_balance && <Button size="sm" variant="ghost" onClick={() => setConfirmCash(true)} icon={<Banknote className="h-4 w-4" />}>Payer en espèces</Button>}
+          {r.invoice_id && <DownloadInvoiceButton scope="client" id={r.invoice_id} number={String(r.invoice_id)} variant="ghost" label="Facture" />}
           {lateRule && <p className="text-xs text-bone-600">Report en ligne impossible à moins de {Math.round((r.reschedule_limit_minutes || 120) / 60)} h : contactez le studio.</p>}
+        </div>
+      )}
+      {order && (
+        <div className="mt-5 border-t border-ink-600/70 pt-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-bone-400">Suivi de la commande</p>
+            {order.production_status && PRODUCTION[order.production_status] && <Badge tone={PRODUCTION[order.production_status].tone}>{PRODUCTION[order.production_status].label}</Badge>}
+          </div>
+          <OrderSteps milestones={order.milestones} />
         </div>
       )}
       {r.statut === 'annulee' && r.cancel_reason && <p className="mt-4 text-xs text-bone-600">Motif : {r.cancel_reason}</p>}
 
       <Confirm open={confirmCash} onClose={() => setConfirmCash(false)} title="Payer en espèces"
-        message={<>Vous réglerez <strong>{fcfa(r.solde)}</strong> au studio. L’équipe validera la réception avant le début de la session.</>}
+        message={<>Vous réglerez <strong>{fcfa(dueAmount)}</strong> au studio{due ? <> (« {due.label} »)</> : null}. L’équipe validera la réception{due ? '' : ' avant le début de la session'}.</>}
         confirmLabel="Confirmer" onConfirm={async () => {
           try { await api(`/client/reservations/${r.id}/pay-cash`, { method: 'POST' }); toast('Le studio a été informé de votre paiement en espèces.'); setConfirmCash(false); onChanged(); }
           catch (e: any) { toast(e.message, 'error'); }
@@ -330,6 +346,12 @@ export const ProfileForm: React.FC = () => {
         </div>
         <Button type="submit" variant="subtle" loading={busy === 'pwd'}>Mettre à jour</Button>
       </form>
+
+      <div className="card space-y-3 p-6 sm:p-8">
+        <h2 className="text-lg font-semibold">Notifications sur cet appareil</h2>
+        <p className="text-sm text-bone-400">Recevez les notifications sur l’écran de votre téléphone, même application fermée.</p>
+        <PushToggle app={user?.role === 'client' ? 'client' : 'admin'} />
+      </div>
 
       <div className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div>

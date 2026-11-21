@@ -4,7 +4,21 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#09090A" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest-client.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/client-apple-180.png" />
+    <script>
+      // Fiche d'application dès le chargement : Westaf Admin (noire) pour /admin et /ingenieur
+      (function () {
+        if (/^\/(admin|ingenieur)/.test(location.pathname)) {
+          document.querySelector('link[rel="manifest"]').href = '/manifest-admin.webmanifest';
+          document.querySelector('link[rel="apple-touch-icon"]').href = '/icons/admin-apple-180.png';
+          document.querySelector('meta[name="theme-color"]').content = '#09090a';
+        }
+      })();
+    </script>
     <meta name="description" content="Westaf Records — studio d'enregistrement professionnel aux Almadies, Dakar. Enregistrement, mixage, mastering. Réservation en ligne." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

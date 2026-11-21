@@ -29,6 +29,7 @@ export interface Service {
   max_hours: number;
   allow_deposit: boolean;
   deposit_percent: number;
+  milestone_percent: number;
   features: string[];
   image_url: string | null;
   is_active: boolean;
@@ -105,7 +106,25 @@ export interface Reservation {
   can_resume_payment?: boolean;
   reschedule_limit_minutes?: number;
   autorisee_a_commencer?: boolean;
+  production_status?: string | null;
+  order?: OrderInfo | null;
+  invoice_id?: number | null;
 }
+
+export type MilestoneStatus = 'a_venir' | 'demande' | 'en_attente_validation' | 'paye';
+export interface Milestone {
+  id: number;
+  position: number;
+  kind: 'acompte' | 'premiers_livrables' | 'livraison_finale';
+  label: string;
+  percent: number;
+  amount: number;
+  status: MilestoneStatus;
+  deliverable_note: string | null;
+  requested_at: string | null;
+  paid_at: string | null;
+}
+export interface OrderInfo { production_status: string | null; milestones: Milestone[]; current_id: number | null; next_id: number | null }
 
 export interface Slot { start: string; end: string; label: string; available: boolean; reason: string | null }
 export interface DaySummary { date: string; open: boolean; available: number }
@@ -123,6 +142,7 @@ export interface PublicSettings {
   instagram_url: string | null;
   snapchat_url: string | null;
   facebook_url: string | null;
+  productions_playlist_url: string | null;
   booking_window_days: string;
   min_lead_minutes: string;
   reschedule_limit_minutes: string;

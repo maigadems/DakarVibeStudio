@@ -64,7 +64,25 @@ export const HISTORY: Record<string, string> = {
   reminder_failed: 'Échec d’envoi du rappel',
   reminder_skipped: 'Rappel non nécessaire',
   presence_confirmed: 'Présence confirmée par le client',
-  reschedule_requested: 'Le client souhaite reporter'
+  reschedule_requested: 'Le client souhaite reporter',
+  milestone_requested: 'Paiement d’étape demandé',
+  milestone_reminded: 'Relance de paiement d’étape',
+  milestone_paid: 'Étape réglée',
+  plan_updated: 'Échéancier modifié'
+};
+
+export const MILESTONE: Record<string, { label: string; tone: Tone }> = {
+  a_venir: { label: 'À venir', tone: 'neutral' },
+  demande: { label: 'Paiement demandé', tone: 'amber' },
+  en_attente_validation: { label: 'Espèces à valider', tone: 'blue' },
+  paye: { label: 'Réglée', tone: 'green' }
+};
+
+export const PRODUCTION: Record<string, { label: string; tone: Tone }> = {
+  en_attente: { label: 'En attente de l’acompte', tone: 'amber' },
+  en_cours: { label: 'En production', tone: 'ember' },
+  premiers_livrables: { label: 'Premiers livrables envoyés', tone: 'blue' },
+  livree: { label: 'Livrée', tone: 'green' }
 };
 
 export const TONE_CLASS: Record<Tone, string> = {

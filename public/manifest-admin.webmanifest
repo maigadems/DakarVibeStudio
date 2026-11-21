@@ -1,0 +1,23 @@
+{
+  "id": "/?app=admin",
+  "name": "Westaf Admin",
+  "short_name": "Westaf Admin",
+  "description": "Administration du studio : réservations, commandes, paiements, factures et notifications.",
+  "lang": "fr",
+  "start_url": "/admin?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#09090a",
+  "theme_color": "#09090a",
+  "icons": [
+    { "src": "/icons/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/admin-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Réservations", "url": "/admin/reservations", "icons": [{ "src": "/icons/admin-192.png", "sizes": "192x192" }] },
+    { "name": "Commandes", "url": "/admin/commandes", "icons": [{ "src": "/icons/admin-192.png", "sizes": "192x192" }] },
+    { "name": "Paiements", "url": "/admin/paiements", "icons": [{ "src": "/icons/admin-192.png", "sizes": "192x192" }] }
+  ]
+}

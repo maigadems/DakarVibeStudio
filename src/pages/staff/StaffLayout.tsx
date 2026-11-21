@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Bell, CalendarDays, CreditCard, FileText, Disc3, Images, LayoutDashboard, ListChecks, LogOut, Menu, Mic2, Settings, Users, UserCog, X, Headphones, ExternalLink, CalendarOff, ShieldCheck
+  Bell, CalendarDays, CreditCard, FileText, Package, Music2, Disc3, Images, LayoutDashboard, ListChecks, LogOut, Menu, Mic2, Settings, Users, UserCog, X, Headphones, ExternalLink, CalendarOff, ShieldCheck
 } from 'lucide-react';
 import { api } from '../../lib/api';
 import { cx, fAgo } from '../../lib/format';
@@ -10,6 +10,7 @@ import type { Notification } from '../../lib/types';
 import { homeFor, useAuth } from '../../context/AuthContext';
 import { useConfig } from '../../context/ConfigContext';
 import { ForcePasswordChange } from '../../components/Guards';
+import { AppPrompts } from '../../components/AppPrompts';
 import { Alert, Button, Field, Input, Spinner } from '../../components/ui';
 import { PasswordInput } from '../auth/AuthPages';
 import { useDocumentTitle } from '../../lib/hooks';
@@ -19,6 +20,7 @@ type NavItem = { to: string; label: string; icon: React.ComponentType<{ classNam
 const ADMIN_NAV: NavItem[] = [
   { to: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { to: '/admin/reservations', label: 'Réservations', icon: ListChecks },
+  { to: '/admin/commandes', label: 'Commandes', icon: Package },
   { to: '/admin/calendrier', label: 'Calendrier', icon: CalendarDays },
   { to: '/admin/paiements', label: 'Paiements', icon: CreditCard },
   { to: '/admin/factures', label: 'Factures', icon: FileText },
@@ -27,6 +29,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: '/admin/services', label: 'Services', icon: Disc3 },
   { to: '/admin/equipements', label: 'Équipements', icon: Mic2 },
   { to: '/admin/galerie', label: 'Galerie', icon: Images },
+  { to: '/admin/productions', label: 'Productions', icon: Music2 },
   { to: '/admin/disponibilites', label: 'Horaires & fermetures', icon: CalendarOff },
   { to: '/admin/administrateurs', label: 'Administrateurs', icon: ShieldCheck, superOnly: true },
   { to: '/admin/parametres', label: 'Paramètres', icon: Settings }
@@ -160,7 +163,7 @@ export const StaffLayout: React.FC<{ kind: 'admin' | 'engineer' }> = ({ kind }) 
           <div className="hidden text-sm text-bone-600 lg:block">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <NotificationBell base={kind === 'admin' ? '/admin' : '/engineer'} />
         </header>
-        <main className="px-4 py-6 sm:px-6 sm:py-8 lg:px-10"><Outlet /></main>
+        <main className="px-4 py-6 sm:px-6 sm:py-8 lg:px-10"><AppPrompts app="admin" /><Outlet /></main>
       </div>
       <ForcePasswordChange />
     </div>

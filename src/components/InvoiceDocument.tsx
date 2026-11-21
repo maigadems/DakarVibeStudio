@@ -1,11 +1,11 @@
 // Facture au format « papier » : affichée à l'écran et imprimable / enregistrable en PDF
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Download, Printer } from 'lucide-react';
-import { downloadFile } from '../lib/api';
+import { ArrowLeft, Download, Mail, MessageCircle, Printer, Send, Share2 } from 'lucide-react';
+import { api, downloadFile } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { fDateNum, fcfa, phoneDisplay } from '../lib/format';
-import { Badge, Button } from './ui';
+import { Badge, Button, Modal, Toggle } from './ui';
 
 export interface Invoice {
   id: number;
@@ -20,6 +20,7 @@ export interface Invoice {
   paid: number;
   due: number;
   payments: { id: number; date: string; amount: number; reference: string; label: string }[];
+  share_url?: string;
 }
 
 export interface InvoiceRow { id: number; number: string; issued_at: string; client_name: string; client_email: string | null; reservation_id: string; service_name: string; start_at: string | null; total: number; paid: number; due: number; status: Invoice['status'] }
@@ -33,7 +34,10 @@ export const INVOICE_STATUS: Record<Invoice['status'], { label: string; tone: 'g
 const money = (n: number) => fcfa(n).replace('FCFA', 'F CFA');
 
 // Téléchargement du PDF généré par le serveur (client : ses factures ; admin : toutes)
-export const DownloadInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: number; number: string; size?: 'sm' | 'md'; variant?: 'primary' | 'subtle' | 'ghost'; label?: string; className?: string }> = ({ scope, id, number, size = 'sm', variant = 'primary', label = 'Télécharger', className }) => {
+export type InvoiceScope = 'client' | 'admin' | 'public';
+const pdfPath = (scope: InvoiceScope, id: number, token?: string) => (scope === 'public' ? `/actions/${token}/invoice/pdf` : `${scope === 'admin' ? '/admin' : '/client'}/invoices/${id}/pdf`);
+
+export const DownloadInvoiceButton: React.FC<{ scope: InvoiceScope; id: number; number: string; token?: string; size?: 'sm' | 'md'; variant?: 'primary' | 'subtle' | 'ghost'; label?: string; className?: string }> = ({ scope, id, number, token, size = 'sm', variant = 'primary', label = 'Télécharger', className }) => {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   return (
@@ -42,7 +46,7 @@ export const DownloadInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: nu
         e.stopPropagation();
         setBusy(true);
         try {
-          await downloadFile(`${scope === 'admin' ? '/admin' : '/client'}/invoices/${id}/pdf`, `facture-${number}.pdf`);
+          await downloadFile(pdfPath(scope, id, token), `facture-${number}.pdf`);
           toast(`Facture ${number} téléchargée`);
         } catch (err: any) { toast(err.message, 'error'); } finally { setBusy(false); }
       }}>
@@ -51,14 +55,68 @@ export const DownloadInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: nu
   );
 };
 
-export const InvoiceDocument: React.FC<{ invoice: Invoice; backTo: string; scope: 'client' | 'admin' }> = ({ invoice: inv, backTo, scope }) => (
+// Envoi / partage de la facture
+const RESULT: Record<string, string> = { sent: 'envoyée', not_configured: 'non configuré sur le serveur', no_contact: 'aucun contact', failed: 'échec' };
+
+export const SendInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: number; number: string; shareUrl?: string; size?: 'sm' | 'md'; variant?: 'primary' | 'subtle' | 'ghost'; label?: string }> = ({ scope, id, number, shareUrl, size = 'sm', variant = 'ghost', label = 'Envoyer' }) => {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [channels, setChannels] = useState({ email: true, whatsapp: true });
+  const [busy, setBusy] = useState(false);
+  const send = async () => {
+    setBusy(true);
+    try {
+      const r = await api<{ result: Record<string, string> }>(`/${scope === 'admin' ? 'admin' : 'client'}/invoices/${id}/send`, { method: 'POST', body: scope === 'admin' ? channels : {} });
+      const parts = Object.entries(r.result).map(([k, v]) => `${k === 'email' ? 'E-mail' : 'WhatsApp'} : ${RESULT[v] || v}`);
+      toast(`Facture ${number} — ${parts.join(' · ')}`, Object.values(r.result).every((v) => v === 'sent') ? 'success' : 'info');
+      setOpen(false);
+    } catch (e: any) { toast(e.message, 'error'); } finally { setBusy(false); }
+  };
+  const share = async () => {
+    if (!shareUrl) return;
+    try {
+      if (navigator.share) await navigator.share({ title: `Facture ${number}`, url: shareUrl });
+      else { await navigator.clipboard.writeText(shareUrl); toast('Lien de la facture copié'); }
+    } catch { /* partage annulé */ }
+  };
+  return (
+    <>
+      <Button size={size} variant={variant} icon={<Send className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); setOpen(true); }} aria-label={`Envoyer la facture ${number}`}>{label}</Button>
+      <Modal open={open} onClose={() => setOpen(false)} size="sm" title={`Envoyer la facture ${number}`}
+        footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><Button loading={busy} disabled={scope === 'admin' && !channels.email && !channels.whatsapp} icon={<Send className="h-4 w-4" />} onClick={send}>{scope === 'admin' ? 'Envoyer au client' : 'Recevoir par e-mail'}</Button></>}>
+        <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+          {scope === 'admin' ? (
+            <>
+              <p className="text-sm text-bone-400">La facture est envoyée au client avec le PDF en pièce jointe (e-mail) et un lien de téléchargement (WhatsApp).</p>
+              <div className="flex flex-col gap-3">
+                <Toggle checked={channels.email} onChange={(v) => setChannels({ ...channels, email: v })} label={<span className="inline-flex items-center gap-2"><Mail className="h-4 w-4 text-ember" />Par e-mail (PDF joint)</span>} />
+                <Toggle checked={channels.whatsapp} onChange={(v) => setChannels({ ...channels, whatsapp: v })} label={<span className="inline-flex items-center gap-2"><MessageCircle className="h-4 w-4 text-ember" />Par WhatsApp (lien)</span>} />
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-bone-400">Recevez la facture en PDF à l’adresse e-mail de votre compte, ou partagez son lien (comptable, manager…).</p>
+          )}
+          {shareUrl && (
+            <div className="flex items-center gap-2 rounded-xl border border-ink-600 bg-ink-900 p-2 pl-3">
+              <span className="min-w-0 flex-1 truncate text-xs text-bone-400">{shareUrl}</span>
+              <Button size="sm" variant="subtle" icon={<Share2 className="h-4 w-4" />} onClick={share}>Partager</Button>
+            </div>
+          )}
+        </div>
+      </Modal>
+    </>
+  );
+};
+
+export const InvoiceDocument: React.FC<{ invoice: Invoice; backTo?: string; scope: InvoiceScope; token?: string }> = ({ invoice: inv, backTo, scope, token }) => (
   <div>
     <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
-      <Link to={backTo} className="inline-flex items-center gap-2 text-sm text-bone-400 hover:text-bone"><ArrowLeft className="h-4 w-4" />Retour aux factures</Link>
+      {backTo ? <Link to={backTo} className="inline-flex items-center gap-2 text-sm text-bone-400 hover:text-bone"><ArrowLeft className="h-4 w-4" />Retour aux factures</Link> : <span />}
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={INVOICE_STATUS[inv.status].tone}>{INVOICE_STATUS[inv.status].label}</Badge>
         <Button size="sm" variant="ghost" icon={<Printer className="h-4 w-4" />} onClick={() => window.print()}>Imprimer</Button>
-        <DownloadInvoiceButton scope={scope} id={inv.id} number={inv.number} label="Télécharger le PDF" />
+        {scope !== 'public' && <SendInvoiceButton scope={scope} id={inv.id} number={inv.number} shareUrl={inv.share_url} />}
+        <DownloadInvoiceButton scope={scope} id={inv.id} number={inv.number} token={token} label="Télécharger le PDF" />
       </div>
     </div>
 

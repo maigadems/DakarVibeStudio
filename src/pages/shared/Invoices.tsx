@@ -7,7 +7,7 @@ import { api } from '../../lib/api';
 import { useAsync, useDebounced, useDocumentTitle } from '../../lib/hooks';
 import { cx, fDateNum, fDateShort, fcfa } from '../../lib/format';
 import { Badge, Button, Empty, ErrorState, Input, PageHeader, Spinner, Tabs } from '../../components/ui';
-import { DownloadInvoiceButton, INVOICE_STATUS, InvoiceDocument, type Invoice, type InvoiceRow } from '../../components/InvoiceDocument';
+import { DownloadInvoiceButton, INVOICE_STATUS, InvoiceDocument, SendInvoiceButton, type Invoice, type InvoiceRow } from '../../components/InvoiceDocument';
 
 type Scope = 'client' | 'admin';
 const base = (scope: Scope) => (scope === 'admin' ? '/admin/factures' : '/mon-espace/factures');
@@ -87,6 +87,7 @@ export const InvoiceList: React.FC<{ scope: Scope }> = ({ scope }) => {
                       <Button size="sm" variant="ghost" icon={<Eye className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); navigate(`${base(scope)}/${i.id}`); }} aria-label={`Voir la facture ${i.number}`}>
                         <span className="hidden sm:inline">Voir</span>
                       </Button>
+                      <SendInvoiceButton scope={scope} id={i.id} number={i.number} label={scope === 'admin' ? 'Envoyer' : 'E-mail'} />
                       <DownloadInvoiceButton scope={scope} id={i.id} number={i.number} variant="subtle" />
                     </div>
                   </div>
@@ -112,3 +113,17 @@ export const InvoiceView: React.FC<{ scope: Scope }> = ({ scope }) => {
   return <InvoiceDocument invoice={data} backTo={base(scope)} scope={scope} />;
 };
 
+
+// Facture ouverte depuis le lien envoyé au client (WhatsApp, e-mail, partage) : sans connexion
+export const PublicInvoice: React.FC = () => {
+  const { token } = useParams();
+  const { data, loading, error } = useAsync(() => api<{ invoice: Invoice }>(`/actions/${token}/invoice`, { auth: false }).then((r) => r.invoice), [token]);
+  useDocumentTitle(data ? `Facture ${data.number}` : 'Facture');
+  return (
+    <div className="container-x pb-20 pt-28 sm:pt-32">
+      {loading && <Spinner />}
+      {error && <div className="mx-auto max-w-lg"><ErrorState message={error} /></div>}
+      {data && <InvoiceDocument invoice={data} scope="public" token={token} />}
+    </div>
+  );
+};

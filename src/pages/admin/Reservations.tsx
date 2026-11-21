@@ -5,9 +5,10 @@ import { api } from '../../lib/api';
 import { useAsync, useDebounced, useDocumentTitle } from '../../lib/hooks';
 import { cx, fAgo, fDate, fDateShort, fRange, fcfa, phoneDisplay, studioToday } from '../../lib/format';
 import { HISTORY, PAYMENT, PRESENCE, SESSION, STATUT } from '../../lib/labels';
-import type { HistoryEntry, Reservation, Service, Slot, User } from '../../lib/types';
+import type { HistoryEntry, OrderInfo, Reservation, Service, Slot, User } from '../../lib/types';
+import { OrderPanel } from './Orders';
 import { useToast } from '../../context/ToastContext';
-import { Alert, Badge, Button, Confirm, Empty, ErrorState, Field, Input, Modal, PageHeader, Select, Spinner, StatusBadge, Tabs, Textarea } from '../../components/ui';
+import { Alert, Badge, Button, Confirm, Empty, ErrorState, Field, Input, Modal, PageHeader, Select, Spinner, StatusBadge, Tabs, Textarea, Toggle } from '../../components/ui';
 import { SlotPicker } from '../../components/SlotPicker';
 import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
 
@@ -17,7 +18,7 @@ export const useEngineers = () => useAsync(() => api<{ users: User[] }>('/admin/
 export const ReservationDetail: React.FC<{ id: string | null; onClose: () => void; onChanged?: () => void }> = ({ id, onClose, onChanged }) => {
   const toast = useToast();
   const { data, loading, error, reload } = useAsync(
-    () => (id ? api<{ reservation: Reservation; history: HistoryEntry[]; payments: any[]; messages: any[]; invoice: { id: number; number: string } | null }>(`/admin/reservations/${id}`) : Promise.resolve(null)),
+    () => (id ? api<{ reservation: Reservation; history: HistoryEntry[]; payments: any[]; messages: any[]; invoice: { id: number; number: string } | null; order: OrderInfo | null }>(`/admin/reservations/${id}`) : Promise.resolve(null)),
     [id]
   );
   const engineers = useEngineers();
@@ -57,6 +58,7 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
   const loadSlots = useMemo(() => (d: string) => api<{ slots: Slot[] }>(`/admin/reservations/${id}/availability?date=${d}`).then((x) => x.slots), [id]);
 
   const active = r && ['confirmee', 'a_traiter', 'en_attente'].includes(r.statut);
+  const order = data?.order && data.order.milestones.length ? data.order : null;
 
   return (
     <Modal open={!!id} onClose={onClose} size="lg" title={r ? <span className="flex flex-wrap items-center gap-2">{r.nom}<span className="text-sm font-normal text-bone-600">#{r.id.slice(0, 8)}</span></span> : 'Réservation'}>
@@ -73,7 +75,8 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
           </div>
 
           {r.statut === 'a_traiter' && <Alert tone="warning">Paiement reçu alors que le créneau avait été repris : proposez un autre créneau (bouton « Reporter ») puis confirmez, ou procédez à un remboursement.</Alert>}
-          {r.payment_status === 'en_attente_validation' && (
+          {order && <OrderPanel reservation={r} order={order} onChanged={() => { reload(); onChanged?.(); }} />}
+          {!order && r.payment_status === 'en_attente_validation' && (
             <div className="flex flex-col gap-3 rounded-2xl border border-sky-400/30 bg-sky-400/10 p-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-bone-200"><Banknote className="mr-2 inline h-4 w-4 text-sky-300" />Le client souhaite payer <strong>{fcfa(r.solde)}</strong> en espèces.</p>
               <Button size="sm" onClick={() => setCashOpen(true)}>Confirmer la réception</Button>
@@ -126,7 +129,7 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
                 <div className="flex flex-wrap gap-2 border-t border-ink-600/70 pt-5">
                   {r.booking_mode === 'slot' && <Button size="sm" variant="outline" icon={<CalendarClock className="h-4 w-4" />} onClick={() => setResched(!resched)}>Reporter</Button>}
                   {r.statut === 'a_traiter' && <Button size="sm" loading={busy === 'confirm'} onClick={() => run('confirm', () => api(`/admin/reservations/${r.id}`, { method: 'PATCH', body: { statut: 'confirmee' } }), 'Réservation confirmée')}>Confirmer</Button>}
-                  {r.statut === 'confirmee' && r.payment_status !== 'paye' && r.payment_status !== 'en_attente_validation' && <Button size="sm" variant="subtle" icon={<Banknote className="h-4 w-4" />} onClick={() => setCashOpen(true)}>Encaisser en espèces</Button>}
+                  {!order && r.statut === 'confirmee' && r.payment_status !== 'paye' && r.payment_status !== 'en_attente_validation' && <Button size="sm" variant="subtle" icon={<Banknote className="h-4 w-4" />} onClick={() => setCashOpen(true)}>Encaisser en espèces</Button>}
                   {r.statut === 'confirmee' && r.session_status === 'autorisee' && <Button size="sm" variant="subtle" icon={<Play className="h-4 w-4" />} loading={busy === 'start'} onClick={() => run('start', () => api(`/admin/reservations/${r.id}/session-status`, { method: 'POST', body: { status: 'en_cours' } }), 'Session démarrée')}>Démarrer</Button>}
                   {r.statut === 'confirmee' && ['en_cours', 'autorisee'].includes(r.session_status) && <Button size="sm" variant="subtle" icon={<CheckCheck className="h-4 w-4" />} loading={busy === 'done'} onClick={() => run('done', () => api(`/admin/reservations/${r.id}/session-status`, { method: 'POST', body: { status: 'terminee' } }), 'Session terminée')}>Terminer</Button>}
                   <Button size="sm" variant="danger" icon={<XCircle className="h-4 w-4" />} onClick={() => setCancelOpen(true)}>Annuler</Button>
@@ -232,6 +235,7 @@ const NewReservation: React.FC<{ open: boolean; onClose: () => void; onCreated: 
   const services = useAsync(() => api<{ services: Service[] }>('/admin/services').then((r) => r.services.filter((s) => s.booking_mode !== 'quote')), []);
   const engineers = useEngineers();
   const [f, setF] = useState({ service_id: '', hours: '1', tracks: '1', nom: '', telephone: '', email: '', message: '', engineer_id: '', montant_total: '' });
+  const [withMastering, setWithMastering] = useState(false);
   const [date, setDate] = useState(studioToday());
   const [start, setStart] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[] | null>(null);
@@ -248,11 +252,12 @@ const NewReservation: React.FC<{ open: boolean; onClose: () => void; onCreated: 
   const submit = async () => {
     setBusy(true); setError(null);
     try {
-      const r = await api<{ reservation: Reservation }>('/admin/reservations', { method: 'POST', body: { ...f, start, montant_total: f.montant_total === '' ? undefined : Number(f.montant_total) } });
+      const r = await api<{ reservation: Reservation }>('/admin/reservations', { method: 'POST', body: { ...f, start, with_mastering: service?.slug === 'mixage' && withMastering, montant_total: f.montant_total === '' ? undefined : Number(f.montant_total) } });
       toast('Réservation créée'); onCreated(r.reservation);
     } catch (e: any) { setError(e.message); } finally { setBusy(false); }
   };
-  const estimated = service?.price ? service.price * Number(service.booking_mode === 'slot' ? f.hours : f.tracks) : 0;
+  const masteringSvc = services.data?.find((x) => x.slug === 'mastering');
+  const estimated = (service?.price ? service.price * Number(service.booking_mode === 'slot' ? f.hours : f.tracks) : 0) + (service?.slug === 'mixage' && withMastering && masteringSvc?.price ? masteringSvc.price * Number(f.tracks) : 0);
 
   return (
     <Modal open={open} onClose={onClose} size="lg" title="Nouvelle réservation (téléphone / sur place)"
@@ -272,6 +277,10 @@ const NewReservation: React.FC<{ open: boolean; onClose: () => void; onCreated: 
           <Field label="Montant total (FCFA)" hint={estimated ? `Tarif standard : ${fcfa(estimated)}` : undefined}><Input type="number" min={0} placeholder={String(estimated || '')} value={f.montant_total} onChange={(e) => setF({ ...f, montant_total: e.target.value })} /></Field>
           <Field label="Ingénieur (facultatif)"><Select value={f.engineer_id} onChange={(e) => setF({ ...f, engineer_id: e.target.value })}><option value="">—</option>{(engineers.data || []).map((u) => <option key={u.id} value={u.id}>{u.first_name} {u.last_name}</option>)}</Select></Field>
         </div>
+        {service?.slug === 'mixage' && masteringSvc && (
+          <Toggle checked={withMastering} onChange={setWithMastering} label={`Ajouter le mastering (+${fcfa(masteringSvc.price)} / titre)`} />
+        )}
+        {service?.booking_mode === 'per_track' && <p className="text-xs text-bone-600">Commande payée par étapes : l’acompte est à encaisser depuis la fiche de la commande.</p>}
         {service?.booking_mode === 'slot' && (
           <div>
             <Field label="Date"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>

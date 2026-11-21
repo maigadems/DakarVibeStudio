@@ -58,7 +58,8 @@ const Services: React.FC = () => {
                       {s.booking_mode === 'slot' && (
                         <div className="flex items-center gap-2 text-sm text-bone-400"><Clock className="h-4 w-4 text-ember" />{s.min_hours} à {s.max_hours} h par session</div>
                       )}
-                      {s.allow_deposit && <div className="flex items-center gap-2 text-sm text-bone-400"><Wallet className="h-4 w-4 text-ember" />Acompte de {s.deposit_percent} % possible</div>}
+                      {s.allow_deposit && s.booking_mode === 'slot' && <div className="flex items-center gap-2 text-sm text-bone-400"><Wallet className="h-4 w-4 text-ember" />Acompte de {s.deposit_percent} % possible</div>}
+                      {s.booking_mode === 'per_track' && s.allow_deposit && s.deposit_percent < 100 && <div className="flex items-center gap-2 text-sm text-bone-400"><Wallet className="h-4 w-4 text-ember" />Paiement en étapes : {[s.deposit_percent, s.milestone_percent, 100 - s.deposit_percent - (s.milestone_percent || 0)].filter((x) => x > 0).join(" % / ")} %</div>}
                     </div>
                     <Link to={bookLink(s)} className="group/btn flex h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-ember to-crimson px-6 text-sm font-bold text-white shadow-lg shadow-ember/20">
                       Réserver ce service <ArrowRight className="h-4 w-4 transition group-hover/btn:translate-x-1" />

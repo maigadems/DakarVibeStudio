@@ -6,6 +6,7 @@ interface ConfigValue {
   settings: PublicSettings;
   openingHours: OpeningDay[];
   googleClientId: string | null;
+  vapidPublicKey: string | null;
   loaded: boolean;
 }
 
@@ -21,18 +22,19 @@ const FALLBACK: PublicSettings = {
   instagram_url: 'https://www.instagram.com/westafrecords',
   snapchat_url: 'https://t.snapchat.com/Y4O4g5fy',
   facebook_url: null,
+  productions_playlist_url: 'https://music.apple.com/fr/playlist/mbalax/pl.u-oZyllYaIRWNp6r8',
   booking_window_days: '30',
   min_lead_minutes: '20',
   reschedule_limit_minutes: '120'
 };
 
-const ConfigContext = createContext<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, loaded: false });
+const ConfigContext = createContext<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, vapidPublicKey: null, loaded: false });
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [value, setValue] = useState<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, loaded: false });
+  const [value, setValue] = useState<ConfigValue>({ settings: FALLBACK, openingHours: [], googleClientId: null, vapidPublicKey: null, loaded: false });
   useEffect(() => {
-    api<{ settings: PublicSettings; openingHours: OpeningDay[]; googleClientId: string | null }>('/public/config', { auth: false })
-      .then((r) => setValue({ settings: { ...FALLBACK, ...Object.fromEntries(Object.entries(r.settings).filter(([, v]) => v !== null && v !== '')) } as PublicSettings, openingHours: r.openingHours, googleClientId: r.googleClientId, loaded: true }))
+    api<{ settings: PublicSettings; openingHours: OpeningDay[]; googleClientId: string | null; vapidPublicKey: string | null }>('/public/config', { auth: false })
+      .then((r) => setValue({ settings: { ...FALLBACK, ...Object.fromEntries(Object.entries(r.settings).filter(([, v]) => v !== null && v !== '')) } as PublicSettings, openingHours: r.openingHours, googleClientId: r.googleClientId, vapidPublicKey: r.vapidPublicKey || null, loaded: true }))
       .catch(() => setValue((v) => ({ ...v, loaded: true })));
   }, []);
   return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;

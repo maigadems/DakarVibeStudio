@@ -1,0 +1,23 @@
+{
+  "id": "/?app=client",
+  "name": "Westaf Records",
+  "short_name": "Westaf",
+  "description": "Réservez vos sessions, suivez vos commandes et téléchargez vos factures.",
+  "lang": "fr",
+  "start_url": "/mon-espace?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/icons/client-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/client-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/client-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Réserver", "url": "/reservation", "icons": [{ "src": "/icons/client-192.png", "sizes": "192x192" }] },
+    { "name": "Mes réservations", "url": "/mon-espace/reservations", "icons": [{ "src": "/icons/client-192.png", "sizes": "192x192" }] },
+    { "name": "Mes factures", "url": "/mon-espace/factures", "icons": [{ "src": "/icons/client-192.png", "sizes": "192x192" }] }
+  ]
+}

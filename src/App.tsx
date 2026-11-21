@@ -1,5 +1,6 @@
-import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { applyAppIdentity } from './lib/pwa';
 import MaintenancePage from './components/MaintenancePage';
 import { PublicLayout } from './components/site/Chrome';
 import { RequireRole } from './components/Guards';
@@ -15,16 +16,21 @@ import { AccountDashboard, AccountLayout, AccountProfile, AccountReservations } 
 import { StaffLayout, StaffLogin } from './pages/staff/StaffLayout';
 import { AdminCalendar, AdminDashboard, AdminPayments } from './pages/admin/Overview';
 import { AdminReservations } from './pages/admin/Reservations';
+import { AdminOrders } from './pages/admin/Orders';
+import { AdminProductions } from './pages/admin/Productions';
 import { AdminClients, AdminTeam } from './pages/admin/People';
 import { AdminEquipment, AdminGallery, AdminServices } from './pages/admin/Catalog';
 import { AdminAvailability, AdminSettings } from './pages/admin/Settings';
-import { InvoiceList, InvoiceView } from './pages/shared/Invoices';
+import { InvoiceList, InvoiceView, PublicInvoice } from './pages/shared/Invoices';
 import { EngineerAbsences, EngineerCalendar, EngineerHome, EngineerProfile } from './pages/engineer/Engineer';
 
 // Mode maintenance : passer à true pour afficher uniquement la page de maintenance
 const MAINTENANCE = false;
 
 const App: React.FC = () => {
+  const { pathname } = useLocation();
+  // Application « Westaf Admin » (noire) pour /admin et /ingenieur, « Westaf Records » (blanche) ailleurs
+  useEffect(() => { applyAppIdentity(pathname); }, [pathname]);
   if (MAINTENANCE) return <MaintenancePage />;
   return (
     <Routes>
@@ -41,6 +47,7 @@ const App: React.FC = () => {
         <Route path="paiement/retour" element={<PaymentReturn />} />
         <Route path="paiement/:token" element={<PaymentAction />} />
         <Route path="presence/:token" element={<PresenceAction />} />
+        <Route path="facture/:token" element={<PublicInvoice />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
@@ -64,6 +71,7 @@ const App: React.FC = () => {
       <Route path="admin" element={<RequireRole roles={['admin', 'super_admin']} loginPath="/admin"><StaffLayout kind="admin" /></RequireRole>}>
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="reservations" element={<AdminReservations />} />
+        <Route path="commandes" element={<AdminOrders />} />
         <Route path="calendrier" element={<AdminCalendar />} />
         <Route path="paiements" element={<AdminPayments />} />
         <Route path="factures" element={<InvoiceList scope="admin" />} />
@@ -73,6 +81,7 @@ const App: React.FC = () => {
         <Route path="services" element={<AdminServices />} />
         <Route path="equipements" element={<AdminEquipment />} />
         <Route path="galerie" element={<AdminGallery />} />
+        <Route path="productions" element={<AdminProductions />} />
         <Route path="disponibilites" element={<AdminAvailability />} />
         <Route path="parametres" element={<AdminSettings />} />
         <Route path="administrateurs" element={<RequireRole roles={['super_admin']} loginPath="/admin"><AdminTeam kind="admin" /></RequireRole>} />

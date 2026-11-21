@@ -44,7 +44,7 @@ export const BarChart: React.FC<{ data: Datum[]; title: string; height?: number;
             ))}
           </div>
           <div className="absolute inset-x-0 bottom-0 flex justify-around gap-[2px] text-[10px] text-bone-400" aria-hidden>
-            {data.map((d) => <span key={d.label} className="flex-1 truncate text-center">{d.label}</span>)}
+            {data.map((d, i) => <span key={d.label} className={`flex-1 text-center ${data.length > 12 ? "w-0 overflow-visible whitespace-nowrap" : "truncate"}${data.length > 12 && i !== 0 && (i + 1) % 5 !== 0 ? ' invisible sm:visible' : ''}`}>{d.label}</span>)}
           </div>
         </div>
       </div>

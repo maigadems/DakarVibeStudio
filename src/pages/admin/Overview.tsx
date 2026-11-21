@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Banknote, CalendarCheck, CalendarDays, CalendarX, CheckCircle2, Clock, Disc3, Headphones, RotateCcw, Users, Wallet, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarCheck, CalendarDays, CalendarX, CheckCircle2, Clock, Disc3, Headphones, RotateCcw, Users, Wallet, ArrowRight, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAsync, useDocumentTitle } from '../../lib/hooks';
 import { fAgo, fDateShort, fRange, fcfa, phoneDisplay, startOfWeek, studioToday, addDaysStr, parseSql } from '../../lib/format';
@@ -196,39 +196,132 @@ export const AdminCalendar: React.FC = () => {
 // ------------------------------------------------------------------ Paiements
 export const AdminPayments: React.FC = () => {
   useDocumentTitle('Paiements');
-  const [tab, setTab] = useState('awaiting_validation');
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [tab, setTab] = useState('completed');
   const [openId, setOpenId] = useState<string | null>(null);
-  const { data, loading, error, reload } = useAsync(() => api<{ payments: any[] }>(`/admin/payments${tab === 'all' ? '' : `?status=${tab}`}`).then((r) => r.payments), [tab]);
+  const summary = useAsync(() => api<PaymentSummary>(`/admin/payments/summary?month=${month}`), [month]);
+  // Les encaissements sont filtrés sur le mois choisi ; les espèces à valider et paiements en cours sont toujours affichés en entier
+  const query = tab === 'completed' ? `?status=completed&month=${month}` : tab === 'all' ? `?month=${month}` : `?status=${tab}`;
+  const { data, loading, error, reload } = useAsync(() => api<{ payments: any[] }>(`/admin/payments${query}`).then((r) => r.payments), [query]);
   const STATUS: Record<string, { label: string; tone: any }> = {
     completed: { label: 'Encaissé', tone: 'green' }, awaiting_validation: { label: 'Espèces à valider', tone: 'blue' }, pending: { label: 'En cours', tone: 'amber' }, canceled: { label: 'Annulé', tone: 'neutral' }, failed: { label: 'Échec', tone: 'red' }
   };
+  const KIND: Record<string, string> = { initial: 'À la réservation / commande', balance: 'Soldes de séances', milestone: 'Étapes de commandes' };
+  const shift = (n: number) => {
+    const d = new Date(`${month}-01T00:00:00Z`);
+    d.setUTCMonth(d.getUTCMonth() + n);
+    setMonth(d.toISOString().slice(0, 7));
+  };
+  const isCurrent = month === new Date().toISOString().slice(0, 7);
+  const monthLabel = new Date(`${month}-01T00:00:00Z`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const s = summary.data;
+  const evolution = s && s.previousMonth.amount > 0 ? Math.round(((s.total.amount - s.previousMonth.amount) / s.previousMonth.amount) * 100) : null;
+  const daysInMonth = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0)).getUTCDate();
+  const daily = s ? Array.from({ length: daysInMonth }, (_, i) => {
+    const day = `${month}-${String(i + 1).padStart(2, '0')}`;
+    const row = s.daily.find((d) => d.day === day);
+    return { label: String(i + 1), value: row?.amount || 0, display: fcfa(row?.amount || 0), hint: `${row?.count || 0} paiement(s) · ${fDateShort(day)}` };
+  }) : [];
+
   return (
-    <div>
-      <PageHeader title="Paiements" subtitle="Paiements en ligne PayTech et encaissements en espèces" />
-      <div className="mb-5"><Tabs value={tab} onChange={setTab} tabs={[{ id: 'awaiting_validation', label: 'Espèces à valider' }, { id: 'completed', label: 'Encaissés' }, { id: 'pending', label: 'En cours' }, { id: 'all', label: 'Tous' }]} /></div>
-      {loading && <Spinner />}
-      {error && <ErrorState message={error} onRetry={reload} />}
-      {data && tab === 'awaiting_validation' && <div className="card p-5"><CashList items={data} loading={false} onChanged={reload} onOpen={setOpenId} /></div>}
-      {data && tab !== 'awaiting_validation' && (data.length === 0 ? <Empty title="Aucun paiement" /> : (
-        <div className="card overflow-x-auto">
-          <table className="w-full min-w-[720px]">
-            <thead className="border-b border-ink-600/70"><tr><th className="table-head">Date</th><th className="table-head">Client</th><th className="table-head">Type</th><th className="table-head">Moyen</th><th className="table-head">Statut</th><th className="table-head text-right">Montant</th></tr></thead>
-            <tbody className="divide-y divide-ink-700">
-              {data.map((p) => (
-                <tr key={p.id} className="cursor-pointer hover:bg-ink-700/50" onClick={() => setOpenId(p.reservation_id)}>
-                  <td className="table-cell whitespace-nowrap text-bone-400">{fDateShort(p.completed_at || p.created_at)}</td>
-                  <td className="table-cell"><p className="font-semibold">{p.nom}</p><p className="text-xs text-bone-600">{p.service_name}</p></td>
-                  <td className="table-cell">{p.kind === 'initial' ? 'Réservation' : 'Solde'}</td>
-                  <td className="table-cell">{p.method === 'cash' ? 'Espèces' : p.provider_method || 'En ligne'}{p.validated_by_name?.trim() && <p className="text-xs text-bone-600">validé par {p.validated_by_name}</p>}</td>
-                  <td className="table-cell"><Badge tone={STATUS[p.status]?.tone}>{STATUS[p.status]?.label || p.status}</Badge></td>
-                  <td className="table-cell text-right font-semibold tabular-nums">{fcfa(p.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-      <ReservationDetail id={openId} onClose={() => setOpenId(null)} onChanged={reload} />
+    <div className="space-y-8">
+      <PageHeader title="Paiements" subtitle="Encaissements en ligne (PayTech) et en espèces, mois par mois."
+        actions={
+          <div className="flex items-center gap-1 rounded-full border border-ink-600 p-1">
+            <button onClick={() => shift(-1)} className="rounded-full p-2 hover:bg-ink-700" aria-label="Mois précédent"><ChevronLeft className="h-4 w-4" /></button>
+            <span className="min-w-[150px] text-center text-sm font-semibold capitalize">{monthLabel}</span>
+            <button onClick={() => shift(1)} disabled={isCurrent} className="rounded-full p-2 hover:bg-ink-700 disabled:opacity-30" aria-label="Mois suivant"><ChevronRight className="h-4 w-4" /></button>
+          </div>
+        } />
+
+      {summary.loading && !s && <Spinner />}
+      {summary.error && <ErrorState message={summary.error} onRetry={summary.reload} />}
+      {s && (
+        <>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard accent label={`Encaissé en ${monthLabel.split(' ')[0]}`} value={<span className="text-2xl">{fcfa(s.total.amount)}</span>} icon={<Wallet className="h-4 w-4" />}
+              hint={evolution === null ? `${s.total.count} paiement(s)` : `${evolution >= 0 ? '+' : ''}${evolution} % vs mois précédent (${fcfa(s.previousMonth.amount)})`} />
+            <StatCard label="En ligne" value={<span className="text-2xl">{fcfa(s.online.amount)}</span>} hint={`${s.online.count} paiement(s) PayTech`} icon={<CreditCard className="h-4 w-4" />} />
+            <StatCard label="En espèces" value={<span className="text-2xl">{fcfa(s.cash.amount)}</span>} hint={`${s.cash.count} encaissement(s) validé(s)`} icon={<Banknote className="h-4 w-4" />} />
+            <StatCard label="Espèces à valider" value={<span className="text-2xl">{fcfa(s.pendingCash.amount)}</span>} hint={`${s.pendingCash.count} demande(s) en attente`} />
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard label="Aujourd’hui" value={<span className="text-xl">{fcfa(s.today.amount)}</span>} hint={`${s.today.count} paiement(s)`} />
+            <StatCard label="Cette semaine" value={<span className="text-xl">{fcfa(s.week.amount)}</span>} hint={`${s.week.count} paiement(s)`} />
+            <StatCard label={`Depuis janvier ${new Date().getUTCFullYear()}`} value={<span className="text-xl">{fcfa(s.year.amount)}</span>} hint={`Total depuis le début : ${fcfa(s.allTime.amount)}`} />
+            <StatCard label="Reste à encaisser" value={<span className="text-xl">{fcfa(s.outstanding)}</span>} hint="Soldes des réservations et commandes en cours" />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-5">
+            <section className="card p-5 sm:p-6 lg:col-span-3">
+              <h2 className="mb-1 font-semibold">Encaissements jour par jour</h2>
+              <p className="mb-5 text-xs text-bone-600 first-letter:uppercase">{monthLabel}</p>
+              {s.total.count ? <BarChart data={daily} title={`Encaissements de ${monthLabel}`} height={200} formatTick={compact} /> : <Empty title="Aucun encaissement ce mois-ci" />}
+            </section>
+            <section className="card p-5 sm:p-6 lg:col-span-2">
+              <h2 className="mb-5 font-semibold">Répartition du mois</h2>
+              {Object.keys(s.byKind).length
+                ? <HBarList data={Object.entries(s.byKind).map(([k, v]) => ({ label: KIND[k] || k, value: v.amount, display: fcfa(v.amount), hint: `${v.count} paiement(s)` }))} />
+                : <Empty title="Aucun encaissement" />}
+            </section>
+          </div>
+        </>
+      )}
+
+      <section>
+        <div className="mb-4"><Tabs value={tab} onChange={setTab} tabs={[{ id: 'completed', label: `Encaissés (${monthLabel})` }, { id: 'awaiting_validation', label: 'Espèces à valider' }, { id: 'pending', label: 'En cours' }, { id: 'all', label: 'Tous (mois)' }]} /></div>
+        {loading && <Spinner />}
+        {error && <ErrorState message={error} onRetry={reload} />}
+        {data && tab === 'awaiting_validation' && <div className="card p-5"><CashList items={data} loading={false} onChanged={() => { reload(); summary.reload(); }} onOpen={setOpenId} /></div>}
+        {data && tab !== 'awaiting_validation' && (data.length === 0 ? <Empty title="Aucun paiement" /> : (
+          <>
+          <ul className="card divide-y divide-ink-700 sm:hidden">
+            {data.map((p) => (
+              <li key={p.id}><button type="button" onClick={() => setOpenId(p.reservation_id)} className="flex w-full items-start justify-between gap-3 p-4 text-left hover:bg-ink-700/50">
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{p.nom}</span>
+                  <span className="block truncate text-xs text-bone-600">{p.service_name}</span>
+                  <span className="mt-1 block text-xs text-bone-400">{fDateShort(p.completed_at || p.created_at)} · {p.kind === 'initial' ? 'Réservation / commande' : p.kind === 'milestone' ? 'Étape de commande' : 'Solde'} · {p.method === 'cash' ? 'Espèces' : p.provider_method || 'En ligne'}</span>
+                </span>
+                <span className="shrink-0 text-right"><span className="block font-semibold tabular-nums">{fcfa(p.amount)}</span><span className="mt-1 inline-block"><Badge tone={STATUS[p.status]?.tone}>{STATUS[p.status]?.label || p.status}</Badge></span></span>
+              </button></li>
+            ))}
+            {tab === 'completed' && <li className="flex justify-between p-4 font-semibold"><span>Total encaissé</span><span className="font-display tabular-nums">{fcfa(data.reduce((a, p) => a + Number(p.amount), 0))}</span></li>}
+          </ul>
+          <div className="card hidden overflow-x-auto sm:block">
+            <table className="w-full min-w-[720px]">
+              <thead className="border-b border-ink-600/70"><tr><th className="table-head">Date</th><th className="table-head">Client</th><th className="table-head">Type</th><th className="table-head">Moyen</th><th className="table-head">Statut</th><th className="table-head text-right">Montant</th></tr></thead>
+              <tbody className="divide-y divide-ink-700">
+                {data.map((p) => (
+                  <tr key={p.id} className="cursor-pointer hover:bg-ink-700/50" onClick={() => setOpenId(p.reservation_id)}>
+                    <td className="table-cell whitespace-nowrap text-bone-400">{fDateShort(p.completed_at || p.created_at)}</td>
+                    <td className="table-cell"><p className="font-semibold">{p.nom}</p><p className="text-xs text-bone-600">{p.service_name}</p></td>
+                    <td className="table-cell">{p.kind === 'initial' ? 'Réservation / commande' : p.kind === 'milestone' ? 'Étape de commande' : 'Solde'}</td>
+                    <td className="table-cell">{p.method === 'cash' ? 'Espèces' : p.provider_method || 'En ligne'}{p.validated_by_name?.trim() && <p className="text-xs text-bone-600">validé par {p.validated_by_name}</p>}</td>
+                    <td className="table-cell"><Badge tone={STATUS[p.status]?.tone}>{STATUS[p.status]?.label || p.status}</Badge></td>
+                    <td className="table-cell text-right font-semibold tabular-nums">{fcfa(p.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {tab === 'completed' && (
+                <tfoot className="border-t border-ink-600/70"><tr><td className="table-cell font-semibold" colSpan={5}>Total encaissé</td><td className="table-cell text-right font-display font-semibold tabular-nums">{fcfa(data.reduce((a, p) => a + Number(p.amount), 0))}</td></tr></tfoot>
+              )}
+            </table>
+          </div>
+          </>
+        ))}
+      </section>
+      <ReservationDetail id={openId} onClose={() => setOpenId(null)} onChanged={() => { reload(); summary.reload(); }} />
     </div>
   );
 };
+
+interface PaymentSummary {
+  month: string;
+  total: { amount: number; count: number }; online: { amount: number; count: number }; cash: { amount: number; count: number };
+  previousMonth: { amount: number; count: number }; today: { amount: number; count: number }; week: { amount: number; count: number };
+  year: { amount: number; count: number }; allTime: { amount: number; count: number };
+  byKind: Record<string, { amount: number; count: number }>;
+  daily: { day: string; amount: number; count: number }[];
+  pendingCash: { count: number; amount: number };
+  outstanding: number;
+}

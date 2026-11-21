@@ -93,7 +93,7 @@ export const AdminAvailability: React.FC = () => {
 // ------------------------------------------------------------------ Paramètres
 interface SettingsData {
   settings: Record<string, string>;
-  integrations: { whatsapp: boolean; whatsappWebhook: boolean; paytech: boolean; smtp: boolean; google: boolean; templates: Record<string, string> };
+  integrations: { whatsapp: boolean; whatsappWebhook: boolean; paytech: boolean; smtp: boolean; google: boolean; push?: boolean; templates: Record<string, string> };
 }
 
 const Status: React.FC<{ ok: boolean; label: string; help: string }> = ({ ok, label, help }) => (
@@ -200,8 +200,9 @@ export const AdminSettings: React.FC = () => {
             {field('instagram_url', 'Instagram', { type: 'url' })}
             {field('snapchat_url', 'Snapchat', { type: 'url' })}
             {field('facebook_url', 'Facebook', { type: 'url' })}
+            {field('productions_playlist_url', 'Playlist des productions', { type: 'url' }, 'Lien « Découvrez toutes nos productions » sur l’accueil')}
           </div>
-          <Button loading={busy === 'save'} icon={<Save className="h-4 w-4" />} onClick={() => save(['studio_name', 'address', 'contact_phone', 'contact_phone_2', 'contact_email', 'contact_email_2', 'maps_url', 'instagram_url', 'snapchat_url', 'facebook_url'])}>Enregistrer</Button>
+          <Button loading={busy === 'save'} icon={<Save className="h-4 w-4" />} onClick={() => save(['studio_name', 'address', 'contact_phone', 'contact_phone_2', 'contact_email', 'contact_email_2', 'maps_url', 'instagram_url', 'snapchat_url', 'facebook_url', 'productions_playlist_url'])}>Enregistrer</Button>
         </section>
       )}
 
@@ -229,6 +230,7 @@ export const AdminSettings: React.FC = () => {
             <Status ok={i.whatsappWebhook} label="Webhook WhatsApp (réponses des clients)" help="WHATSAPP_VERIFY_TOKEN / WHATSAPP_APP_SECRET manquants" />
             <Status ok={i.smtp} label="E-mails (mot de passe oublié)" help="SMTP_HOST / SMTP_USER / SMTP_PASSWORD manquants" />
             <Status ok={i.google} label="Connexion Google" help="GOOGLE_CLIENT_ID manquant" />
+            <Status ok={!!i.push} label="Notifications push (téléphones)" help="VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY manquants" />
           </div>
           <div className="card p-5 text-sm">
             <p className="mb-2 font-semibold">Modèles WhatsApp attendus (à faire approuver dans Meta)</p>

@@ -43,6 +43,21 @@ Toutes les URL doivent renvoyer `index.html`. Les fichiers sont fournis :
 - **Hostinger / Apache** : `public/.htaccess` (copié dans `dist/`) — envoyer le contenu de `dist/` dans `public_html/` ;
 - **Vercel** : `vercel.json`.
 
+## Applications installables (PWA) et notifications
+
+Deux applications distinctes s'installent depuis le même site :
+
+| Application | Pages | Fiche | Couleur |
+|---|---|---|---|
+| **Westaf Records** (clients) | site, `/mon-espace` | `public/manifest-client.webmanifest` | blanche |
+| **Westaf Admin** (équipe) | `/admin`, `/ingenieur` | `public/manifest-admin.webmanifest` | noire |
+
+Pour installer l'application admin, ouvrez `/admin` puis « Installer » (Android / ordinateur) ou
+Partager → « Sur l'écran d'accueil » (iPhone). Un bandeau propose ensuite d'**activer les notifications** ;
+le réglage existe aussi dans Profil → « Notifications sur cet appareil ».
+`public/sw.js` gère le cache et l'affichage des notifications. La clé publique push vient de l'API
+(`/public/config`) : aucune clé dans le frontend.
+
 ## Mode maintenance
 
 `MAINTENANCE` dans `src/App.tsx`.
