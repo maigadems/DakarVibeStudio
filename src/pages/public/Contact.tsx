@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import { useConfig } from '../../context/ConfigContext';
+import { Directions } from '../../components/Directions';
 import { useDocumentTitle } from '../../lib/hooks';
 import { weekdayFr } from '../../lib/format';
 import { PageHero } from '../../components/site/Chrome';
@@ -65,6 +66,7 @@ const Contact: React.FC = () => {
               </div>
             </a>
           )}
+          <Directions />
         </div>
         <form onSubmit={submit} className="card space-y-5 p-6 sm:p-10 lg:col-span-7">
           <h2 className="text-2xl font-semibold">Envoyer un message</h2>

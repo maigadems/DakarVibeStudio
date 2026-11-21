@@ -196,13 +196,14 @@ export const AdminSettings: React.FC = () => {
             {field('contact_phone_2', 'Téléphone secondaire')}
             {field('contact_email', 'E-mail principal', { type: 'email' })}
             {field('contact_email_2', 'E-mail secondaire', { type: 'email' })}
-            {field('maps_url', 'Lien Google Maps', { type: 'url' })}
+            {field('maps_url', 'Lien Google Maps', { type: 'url' }, 'Google Maps → le studio → Partager → Copier le lien')}
+            {field('yango_url', 'Lien Yango', { type: 'url' }, 'Application Yango → position du studio → Partager → Copier le lien')}
             {field('instagram_url', 'Instagram', { type: 'url' })}
             {field('snapchat_url', 'Snapchat', { type: 'url' })}
             {field('facebook_url', 'Facebook', { type: 'url' })}
             {field('productions_playlist_url', 'Playlist des productions', { type: 'url' }, 'Lien « Découvrez toutes nos productions » sur l’accueil')}
           </div>
-          <Button loading={busy === 'save'} icon={<Save className="h-4 w-4" />} onClick={() => save(['studio_name', 'address', 'contact_phone', 'contact_phone_2', 'contact_email', 'contact_email_2', 'maps_url', 'instagram_url', 'snapchat_url', 'facebook_url', 'productions_playlist_url'])}>Enregistrer</Button>
+          <Button loading={busy === 'save'} icon={<Save className="h-4 w-4" />} onClick={() => save(['studio_name', 'address', 'contact_phone', 'contact_phone_2', 'contact_email', 'contact_email_2', 'maps_url', 'yango_url', 'instagram_url', 'snapchat_url', 'facebook_url', 'productions_playlist_url'])}>Enregistrer</Button>
         </section>
       )}
 

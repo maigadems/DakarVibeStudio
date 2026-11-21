@@ -15,6 +15,7 @@ import { Alert, Badge, Button, Confirm, Empty, ErrorState, Field, Input, Modal, 
 import { SlotPicker } from '../../components/SlotPicker';
 import { ForcePasswordChange } from '../../components/Guards';
 import { AppPrompts, PushToggle } from '../../components/AppPrompts';
+import { Directions } from '../../components/Directions';
 import { PasswordInput } from '../auth/AuthPages';
 
 // ------------------------------------------------------------------ Mise en page
@@ -202,6 +203,8 @@ const ReservationCard: React.FC<{ r: Reservation; onReschedule: () => void; onCh
         </div>
       </div>
 
+      {/* Venir au studio : itinéraire Google Maps / Yango pour les sessions à venir */}
+      {r.start_at && r.statut === 'confirmee' && !isPast(r) && <Directions compact className="mt-4" />}
       {(r.can_reschedule || r.can_pay_balance || r.can_resume_payment || lateRule || r.invoice_id) && (
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-ink-600/70 pt-4">
           {r.can_resume_payment && <Button size="sm" loading={busy === 'resume-payment'} onClick={() => pay('resume-payment')} icon={<CreditCard className="h-4 w-4" />}>Finaliser le paiement</Button>}

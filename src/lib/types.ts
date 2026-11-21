@@ -139,6 +139,7 @@ export interface PublicSettings {
   contact_email_2: string | null;
   address: string | null;
   maps_url: string | null;
+  yango_url: string | null;
   instagram_url: string | null;
   snapchat_url: string | null;
   facebook_url: string | null;

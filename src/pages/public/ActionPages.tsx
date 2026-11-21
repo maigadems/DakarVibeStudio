@@ -10,6 +10,7 @@ import { Alert, Button, Spinner } from '../../components/ui';
 import type { Milestone, Reservation } from '../../lib/types';
 import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
 import { Linkify, OrderSteps } from '../../components/OrderSteps';
+import { Directions } from '../../components/Directions';
 
 const Shell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="relative flex min-h-[80vh] items-center justify-center px-4 pb-20 pt-32">
@@ -102,6 +103,7 @@ export const PaymentReturn: React.FC = () => {
         <div className="mt-5 space-y-1 text-bone-200">
           <p className="font-semibold">{res.service_name}</p>
           {res.start_at && <p className="text-sm text-bone-400">{fDate(res.start_at)} · {fRange(res.start_at, res.end_at)}</p>}
+          {res.start_at && <Directions compact className="justify-center pt-3" />}
           {!!res.solde && confirmed && <p className="pt-2 text-sm text-bone-400">Reste à régler avant la session : <strong className="text-bone">{fcfa(res.solde)}</strong></p>}
         </div>
       ) : (

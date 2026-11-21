@@ -19,6 +19,7 @@ const FALLBACK: PublicSettings = {
   contact_email_2: 'prod@westafrecords.com',
   address: 'Almadies, Dakar',
   maps_url: 'https://www.google.com/maps?q=14.7370071411133,-17.49489402771',
+  yango_url: null,
   instagram_url: 'https://www.instagram.com/westafrecords',
   snapchat_url: 'https://t.snapchat.com/Y4O4g5fy',
   facebook_url: null,
