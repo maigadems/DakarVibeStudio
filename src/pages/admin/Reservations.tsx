@@ -11,6 +11,32 @@ import { useToast } from '../../context/ToastContext';
 import { Alert, Badge, Button, Confirm, Empty, ErrorState, Field, Input, Modal, PageHeader, Select, Spinner, StatusBadge, Tabs, Textarea, Toggle } from '../../components/ui';
 import { SlotPicker } from '../../components/SlotPicker';
 import { DownloadInvoiceButton } from '../../components/InvoiceDocument';
+import { useConfig } from '../../context/ConfigContext';
+import { clientMessages, waLink } from '../../lib/whatsapp';
+
+// WhatsApp manuel : messages prêts à envoyer au client (Jeuss appuie simplement sur Envoyer dans WhatsApp)
+const ManualWhatsApp: React.FC<{ r: Reservation }> = ({ r }) => {
+  const { settings } = useConfig();
+  const phone = r.telephone || r.client_phone;
+  const msgs = clientMessages(r, { origin: window.location.origin, mapsUrl: settings.maps_url, studio: settings.studio_name });
+  if (!phone || !msgs.length || r.statut === 'annulee') return null;
+  return (
+    <div className="rounded-2xl border border-ink-600 bg-ink-900 p-4">
+      <p className="mb-3 flex items-center gap-1.5 text-xs uppercase tracking-wider text-bone-600"><MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />Écrire au client sur WhatsApp</p>
+      <div className="flex flex-wrap gap-2">
+        {msgs.map((m) => {
+          const href = waLink(phone, m.text);
+          return href ? (
+            <a key={m.id} href={href} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366]/15 px-3.5 py-2 text-xs font-semibold text-[#5BE38F] ring-1 ring-[#25D366]/30 transition hover:bg-[#25D366]/25">
+              <MessageCircle className="h-3.5 w-3.5" />{m.label}
+            </a>
+          ) : null;
+        })}
+      </div>
+    </div>
+  );
+};
 
 export const useEngineers = () => useAsync(() => api<{ users: User[] }>('/admin/users?role=engineer').then((r) => r.users.filter((u) => u.is_active)), []);
 
@@ -93,7 +119,7 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
             <Button size="sm" variant="subtle" icon={<FileText className="h-4 w-4" />} loading={busy === 'invoice'} onClick={() => run('invoice', () => api(`/admin/reservations/${r.id}/invoice`, { method: 'POST' }), 'Facture émise')}>Émettre la facture</Button>
           ) : null}
 
-          <Tabs value={tab} onChange={setTab} tabs={[{ id: 'details', label: 'Détails' }, { id: 'edit', label: 'Modifier' }, { id: 'history', label: `Historique (${data!.history.length})` }, { id: 'payments', label: 'Paiements' }, { id: 'messages', label: 'WhatsApp' }]} />
+          <Tabs value={tab} onChange={setTab} tabs={[{ id: 'details', label: 'Détails' }, { id: 'edit', label: 'Modifier' }, { id: 'history', label: `Historique (${data!.history.length})` }, { id: 'payments', label: 'Paiements' }]} />
 
           {tab === 'details' && (
             <div className="space-y-5">
@@ -123,6 +149,7 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
                   </Select>
                 </div>
               </div>
+              <ManualWhatsApp r={r} />
               {r.message && <div className="rounded-2xl border border-ink-600 bg-ink-900 p-4 text-sm"><p className="text-xs uppercase tracking-wider text-bone-600">Remarques du client</p><p className="mt-1 whitespace-pre-wrap text-bone-200">{r.message}</p></div>}
 
               {active && (
@@ -202,18 +229,6 @@ export const ReservationDetail: React.FC<{ id: string | null; onClose: () => voi
             ) : <Empty title="Aucun paiement" />
           )}
 
-          {tab === 'messages' && (
-            data!.messages.length ? (
-              <div className="divide-y divide-ink-600/70 rounded-2xl border border-ink-600">
-                {data!.messages.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <div className="min-w-0"><p className="truncate font-semibold"><MessageCircle className="mr-1.5 inline h-3.5 w-3.5 text-ember" />{m.kind}</p><p className="truncate text-xs text-bone-600">{phoneDisplay(m.to_phone)} · {fAgo(m.created_at)}{m.error ? ` · ${m.error}` : ''}</p></div>
-                    <Badge tone={['sent', 'delivered', 'read'].includes(m.status) ? 'green' : m.status === 'failed' || m.status === 'not_configured' ? 'red' : 'neutral'}>{m.status}</Badge>
-                  </div>
-                ))}
-              </div>
-            ) : <Empty title="Aucun message WhatsApp" />
-          )}
         </div>
       )}
 

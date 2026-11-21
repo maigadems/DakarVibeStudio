@@ -165,7 +165,7 @@ const Booking: React.FC = () => {
                           </li>
                         ))}
                       </ol>
-                      <p className="mt-3 text-xs text-bone-600">Seul l’acompte est réglé aujourd’hui. Les étapes suivantes vous sont demandées par le studio (WhatsApp et espace client) au fil de la production.</p>
+                      <p className="mt-3 text-xs text-bone-600">Seul l’acompte est réglé aujourd’hui. Les étapes suivantes vous sont demandées par le studio au fil de la production (espace client).</p>
                     </div>
                   )}
                 </Step>
@@ -188,7 +188,7 @@ const Booking: React.FC = () => {
                     <div className="space-y-5">
                       <div className="grid gap-5 sm:grid-cols-2">
                         <Field label="Nom"><Input value={`${user.first_name} ${user.last_name}`.trim()} disabled /></Field>
-                        <Field label="Téléphone WhatsApp" hint="Confirmation, rappel 2 h avant et lien de paiement.">
+                        <Field label="Téléphone WhatsApp" hint="Pour que le studio puisse vous contacter au sujet de la session.">
                           <Input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="77 000 00 00" />
                         </Field>
                       </div>

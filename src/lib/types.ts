@@ -77,6 +77,8 @@ export interface Reservation {
   nom: string;
   email: string;
   telephone: string;
+  client_first_name?: string | null;
+  client_phone?: string | null;
   message: string;
   internal_notes?: string | null;
   date_reservation: string;

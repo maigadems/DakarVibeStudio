@@ -151,7 +151,7 @@ export const Register: React.FC = () => {
           <Field label="Nom"><Input required autoComplete="family-name" value={f.last_name} onChange={set('last_name')} /></Field>
         </div>
         <Field label="Adresse e-mail"><Input required type="email" autoComplete="email" value={f.email} onChange={set('email')} /></Field>
-        <Field label="Téléphone WhatsApp" hint="Pour vos confirmations et rappels de session (facultatif maintenant, requis pour réserver).">
+        <Field label="Téléphone WhatsApp" hint="Pour que le studio puisse vous contacter (facultatif maintenant, requis pour réserver).">
           <Input type="tel" autoComplete="tel" value={f.phone} onChange={set('phone')} placeholder="77 000 00 00" />
         </Field>
         <Field label="Mot de passe" error={pwdIssue}><PasswordInput required autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>

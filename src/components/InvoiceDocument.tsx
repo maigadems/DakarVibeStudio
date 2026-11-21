@@ -5,7 +5,8 @@ import { ArrowLeft, Download, Mail, MessageCircle, Printer, Send, Share2 } from 
 import { api, downloadFile } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { fDateNum, fcfa, phoneDisplay } from '../lib/format';
-import { Badge, Button, Modal, Toggle } from './ui';
+import { waLink } from '../lib/whatsapp';
+import { Badge, Button, Modal } from './ui';
 
 export interface Invoice {
   id: number;
@@ -56,12 +57,12 @@ export const DownloadInvoiceButton: React.FC<{ scope: InvoiceScope; id: number; 
 };
 
 // Envoi / partage de la facture
-const RESULT: Record<string, string> = { sent: 'envoyée', not_configured: 'non configuré sur le serveur', no_contact: 'aucun contact', failed: 'échec' };
+const RESULT: Record<string, string> = { manual: 'à envoyer à la main', sent: 'envoyée', not_configured: 'non configuré sur le serveur', no_contact: 'aucun contact', failed: 'échec' };
 
-export const SendInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: number; number: string; shareUrl?: string; size?: 'sm' | 'md'; variant?: 'primary' | 'subtle' | 'ghost'; label?: string }> = ({ scope, id, number, shareUrl, size = 'sm', variant = 'ghost', label = 'Envoyer' }) => {
+export const SendInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: number; number: string; shareUrl?: string; clientPhone?: string | null; size?: 'sm' | 'md'; variant?: 'primary' | 'subtle' | 'ghost'; label?: string }> = ({ scope, id, number, shareUrl, clientPhone, size = 'sm', variant = 'ghost', label = 'Envoyer' }) => {
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [channels, setChannels] = useState({ email: true, whatsapp: true });
+  const [channels] = useState({ email: true, whatsapp: false });
   const [busy, setBusy] = useState(false);
   const send = async () => {
     setBusy(true);
@@ -83,15 +84,17 @@ export const SendInvoiceButton: React.FC<{ scope: 'client' | 'admin'; id: number
     <>
       <Button size={size} variant={variant} icon={<Send className="h-4 w-4" />} onClick={(e) => { e.stopPropagation(); setOpen(true); }} aria-label={`Envoyer la facture ${number}`}>{label}</Button>
       <Modal open={open} onClose={() => setOpen(false)} size="sm" title={`Envoyer la facture ${number}`}
-        footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><Button loading={busy} disabled={scope === 'admin' && !channels.email && !channels.whatsapp} icon={<Send className="h-4 w-4" />} onClick={send}>{scope === 'admin' ? 'Envoyer au client' : 'Recevoir par e-mail'}</Button></>}>
+        footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Fermer</Button><Button loading={busy} disabled={scope === 'admin' && !channels.email} icon={<Send className="h-4 w-4" />} onClick={send}>{scope === 'admin' ? 'Envoyer par e-mail' : 'Recevoir par e-mail'}</Button></>}>
         <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
           {scope === 'admin' ? (
             <>
-              <p className="text-sm text-bone-400">La facture est envoyée au client avec le PDF en pièce jointe (e-mail) et un lien de téléchargement (WhatsApp).</p>
-              <div className="flex flex-col gap-3">
-                <Toggle checked={channels.email} onChange={(v) => setChannels({ ...channels, email: v })} label={<span className="inline-flex items-center gap-2"><Mail className="h-4 w-4 text-ember" />Par e-mail (PDF joint)</span>} />
-                <Toggle checked={channels.whatsapp} onChange={(v) => setChannels({ ...channels, whatsapp: v })} label={<span className="inline-flex items-center gap-2"><MessageCircle className="h-4 w-4 text-ember" />Par WhatsApp (lien)</span>} />
-              </div>
+              <p className="flex items-center gap-2 text-sm text-bone-400"><Mail className="h-4 w-4 text-ember" />Par e-mail : la facture est envoyée en PDF joint.</p>
+              {shareUrl && waLink(clientPhone, `Bonjour, voici votre facture ${number} Westaf Records : ${shareUrl}`) && (
+                <a href={waLink(clientPhone, `Bonjour, voici votre facture ${number} Westaf Records : ${shareUrl}`)!} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-semibold text-white hover:bg-[#1fb458]">
+                  <MessageCircle className="h-4 w-4" /> Envoyer par WhatsApp
+                </a>
+              )}
             </>
           ) : (
             <p className="text-sm text-bone-400">Recevez la facture en PDF à l’adresse e-mail de votre compte, ou partagez son lien (comptable, manager…).</p>
@@ -115,7 +118,7 @@ export const InvoiceDocument: React.FC<{ invoice: Invoice; backTo?: string; scop
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={INVOICE_STATUS[inv.status].tone}>{INVOICE_STATUS[inv.status].label}</Badge>
         <Button size="sm" variant="ghost" icon={<Printer className="h-4 w-4" />} onClick={() => window.print()}>Imprimer</Button>
-        {scope !== 'public' && <SendInvoiceButton scope={scope} id={inv.id} number={inv.number} shareUrl={inv.share_url} />}
+        {scope !== 'public' && <SendInvoiceButton scope={scope} id={inv.id} number={inv.number} shareUrl={inv.share_url} clientPhone={inv.client.phone} />}
         <DownloadInvoiceButton scope={scope} id={inv.id} number={inv.number} token={token} label="Télécharger le PDF" />
       </div>
     </div>

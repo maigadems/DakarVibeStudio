@@ -123,7 +123,7 @@ const UserForm: React.FC<{ initial?: User | null; roles: string[]; onSaved: (tmp
         <Field label="Prénom"><Input required value={f.first_name} onChange={(e) => setF({ ...f, first_name: e.target.value })} /></Field>
         <Field label="Nom"><Input value={f.last_name} onChange={(e) => setF({ ...f, last_name: e.target.value })} /></Field>
         <Field label="E-mail (identifiant)"><Input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
-        <Field label="Téléphone WhatsApp" hint="Pour les notifications de sessions"><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></Field>
+        <Field label="Téléphone WhatsApp" hint="Pour le contacter sur WhatsApp"><Input value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></Field>
         {roles.length > 1 && <Field label="Rôle"><Select value={f.role} onChange={(e) => setF({ ...f, role: e.target.value as any })}>{roles.map((r) => <option key={r} value={r}>{ROLE[r]}</option>)}</Select></Field>}
         {!initial && <Field label="Mot de passe provisoire" hint="Laisser vide pour en générer un. À changer à la 1re connexion."><Input value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} /></Field>}
       </div>

@@ -107,12 +107,12 @@ export const PaymentReturn: React.FC = () => {
           {!!res.solde && confirmed && <p className="pt-2 text-sm text-bone-400">Reste à régler avant la session : <strong className="text-bone">{fcfa(res.solde)}</strong></p>}
         </div>
       ) : (
-        <p className="mt-3 text-bone-400">Votre réservation sera confirmée dès la validation du paiement par PayTech. Vous recevrez une confirmation sur WhatsApp.</p>
+        <p className="mt-3 text-bone-400">Votre réservation sera confirmée dès la validation du paiement par PayTech. Elle apparaîtra dans votre espace client.</p>
       )}
       {res?.invoice_id && confirmed && (
         <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-ink-600 bg-ink-900 p-4">
           <p className="flex items-center gap-2 text-sm font-semibold"><FileText className="h-4 w-4 text-ember" />Votre facture est prête</p>
-          <p className="text-xs text-bone-600">Elle vous a aussi été envoyée par WhatsApp et par e-mail.</p>
+          <p className="text-xs text-bone-600">Elle reste disponible à tout moment dans votre espace client.</p>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
             <DownloadInvoiceButton scope="client" id={res.invoice_id} number={`${res.invoice_id}`} label="Télécharger la facture" />
             <Button size="sm" variant="ghost" to={`/mon-espace/factures/${res.invoice_id}`}>Voir</Button>

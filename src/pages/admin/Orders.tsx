@@ -72,7 +72,7 @@ export const OrderPanel: React.FC<{ reservation: Reservation; order: OrderInfo; 
             {requesting?.status === 'demande' ? 'Envoyer la relance' : `Demander ${fcfa(requesting?.amount)}`}
           </Button></>}>
         <div className="space-y-4">
-          <p className="text-sm text-bone-400">Le client reçoit un message WhatsApp, une notification dans son espace et un e-mail, avec un lien pour régler <strong className="text-bone">{fcfa(requesting?.amount)}</strong> ({requesting?.percent} %) en ligne ou en espèces.</p>
+          <p className="text-sm text-bone-400">Le client reçoit une notification dans son espace (et sur son téléphone s’il les a activées), avec un lien pour régler <strong className="text-bone">{fcfa(requesting?.amount)}</strong> ({requesting?.percent} %) en ligne ou en espèces.</p>
           <Field label="Lien ou message pour les livrables (facultatif)" hint="Ex. lien Google Drive / WeTransfer vers les fichiers, consignes d’écoute…">
             <Textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="https://…" />
           </Field>

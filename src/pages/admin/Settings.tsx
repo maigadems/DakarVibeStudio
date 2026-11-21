@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, CircleSlash, MessageCircle, Plus, Save, Send, Trash2, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, CircleSlash, Plus, Save, Trash2, AlertTriangle } from 'lucide-react';
 import { api } from '../../lib/api';
 import { useAsync, useDocumentTitle } from '../../lib/hooks';
-import { fAgo, fDateTime, phoneDisplay, studioToday, weekdayFr } from '../../lib/format';
+import { fDateTime, phoneDisplay, studioToday, weekdayFr } from '../../lib/format';
 import type { OpeningDay } from '../../lib/types';
 import { useToast } from '../../context/ToastContext';
-import { Alert, Badge, Button, Empty, ErrorState, Field, Input, PageHeader, Select, Spinner, Tabs, Toggle } from '../../components/ui';
+import { Alert, Button, ErrorState, Field, Input, PageHeader, Select, Spinner, Tabs, Toggle } from '../../components/ui';
 import { ProfileForm } from '../account/Account';
 
 const HOURS = Array.from({ length: 25 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
@@ -107,8 +107,7 @@ export const AdminSettings: React.FC = () => {
   useDocumentTitle('Paramètres');
   const toast = useToast();
   const { data, loading, error, reload } = useAsync(() => api<SettingsData>('/admin/settings'), []);
-  const logs = useAsync(() => api<{ messages: any[] }>('/admin/whatsapp/messages?limit=60').then((r) => r.messages), []);
-  const [tab, setTab] = useState('whatsapp');
+  const [tab, setTab] = useState('booking');
   const [s, setS] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
   useEffect(() => { if (data) setS({ ...data.settings, whatsapp_admin_number: phoneDisplay(data.settings.whatsapp_admin_number) }); }, [data]);
@@ -129,50 +128,7 @@ export const AdminSettings: React.FC = () => {
   return (
     <div>
       <PageHeader title="Paramètres" />
-      <div className="mb-6"><Tabs value={tab} onChange={setTab} tabs={[{ id: 'whatsapp', label: 'WhatsApp' }, { id: 'booking', label: 'Réservations' }, { id: 'studio', label: 'Studio & contact' }, { id: 'invoices', label: 'Facturation' }, { id: 'integrations', label: 'Intégrations' }, { id: 'account', label: 'Mon compte' }]} /></div>
-
-      {tab === 'whatsapp' && (
-        <div className="space-y-6">
-          {!i.whatsapp && <Alert tone="warning">L’API WhatsApp Cloud n’est pas encore configurée sur le serveur : les messages sont journalisés comme « non configuré » et aucun n’est envoyé. Voir l’onglet Intégrations.</Alert>}
-          <section className="card space-y-5 p-5 sm:p-6">
-            <h2 className="font-semibold">Notifications de Jeuss</h2>
-            {field('whatsapp_admin_number', 'Numéro WhatsApp destinataire', { type: 'tel' }, 'Reçoit les nouvelles réservations, reports, annulations et demandes de paiement en espèces.')}
-            <Toggle checked={s.notify_engineer_whatsapp === '1'} onChange={(v) => setS({ ...s, notify_engineer_whatsapp: v ? '1' : '0' })} label="Prévenir aussi l’ingénieur affecté par WhatsApp (sans montants)" />
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field('reminder_minutes_before', 'Rappel de présence (minutes avant)', { type: 'number', min: 30 }, 'Par défaut 120 min (2 h)')}
-              {field('payment_link_minutes_before', 'Lien de paiement du solde (minutes avant)', { type: 'number', min: 1 }, 'Par défaut 10 min')}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button loading={busy === 'save'} icon={<Save className="h-4 w-4" />} onClick={() => save(['whatsapp_admin_number', 'notify_engineer_whatsapp', 'reminder_minutes_before', 'payment_link_minutes_before'])}>Enregistrer</Button>
-              <Button variant="subtle" loading={busy === 'test'} icon={<Send className="h-4 w-4" />} onClick={async () => {
-                setBusy('test');
-                try { await api('/admin/whatsapp/test', { method: 'POST', body: {} }); toast('Message de test envoyé'); }
-                catch (e: any) { toast(`Échec : ${e.message}`, 'error'); } finally { setBusy(null); logs.reload(); }
-              }}>Envoyer un message de test</Button>
-            </div>
-          </section>
-          <section className="card p-5 sm:p-6">
-            <h2 className="mb-4 font-semibold">Journal des messages</h2>
-            {logs.loading ? <Spinner /> : !logs.data?.length ? <Empty icon={<MessageCircle className="h-7 w-7" />} title="Aucun message" /> : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[620px]">
-                  <thead><tr><th className="table-head">Quand</th><th className="table-head">Type</th><th className="table-head">Numéro</th><th className="table-head">Statut</th></tr></thead>
-                  <tbody className="divide-y divide-ink-700">
-                    {logs.data.map((m) => (
-                      <tr key={m.id}>
-                        <td className="table-cell whitespace-nowrap text-bone-400">{fAgo(m.created_at)}</td>
-                        <td className="table-cell">{m.direction === 'in' ? '← ' : ''}{m.kind}</td>
-                        <td className="table-cell text-bone-400">{phoneDisplay(m.to_phone)}</td>
-                        <td className="table-cell"><Badge tone={['sent', 'delivered', 'read', 'received'].includes(m.status) ? 'green' : ['failed', 'not_configured'].includes(m.status) ? 'red' : 'neutral'}>{m.status}</Badge>{m.error && <p className="mt-1 max-w-xs truncate text-xs text-bone-600" title={m.error}>{m.error}</p>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      )}
+      <div className="mb-6"><Tabs value={tab} onChange={setTab} tabs={[{ id: 'booking', label: 'Réservations' }, { id: 'studio', label: 'Studio & contact' }, { id: 'invoices', label: 'Facturation' }, { id: 'integrations', label: 'Intégrations' }, { id: 'account', label: 'Mon compte' }]} /></div>
 
       {tab === 'booking' && (
         <section className="card space-y-5 p-5 sm:p-6">
@@ -224,18 +180,12 @@ export const AdminSettings: React.FC = () => {
 
       {tab === 'integrations' && (
         <div className="space-y-4">
-          <p className="text-sm text-bone-400">Ces services se configurent dans le fichier <code className="rounded bg-ink-700 px-1.5">.env</code> du serveur (les clés ne transitent jamais par le site).</p>
+          <p className="text-sm text-bone-400">État des services connectés. Les messages WhatsApp sont envoyés à la main depuis chaque réservation (bouton WhatsApp).</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Status ok={i.paytech} label="PayTech (paiement en ligne)" help="PAYTECH_API_KEY / PAYTECH_API_SECRET manquants" />
-            <Status ok={i.whatsapp} label="WhatsApp Cloud API (envoi)" help="WHATSAPP_TOKEN / WHATSAPP_PHONE_NUMBER_ID manquants" />
-            <Status ok={i.whatsappWebhook} label="Webhook WhatsApp (réponses des clients)" help="WHATSAPP_VERIFY_TOKEN / WHATSAPP_APP_SECRET manquants" />
             <Status ok={i.smtp} label="E-mails (mot de passe oublié)" help="SMTP_HOST / SMTP_USER / SMTP_PASSWORD manquants" />
             <Status ok={i.google} label="Connexion Google" help="GOOGLE_CLIENT_ID manquant" />
-            <Status ok={!!i.push} label="Notifications push (téléphones)" help="VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY manquants" />
-          </div>
-          <div className="card p-5 text-sm">
-            <p className="mb-2 font-semibold">Modèles WhatsApp attendus (à faire approuver dans Meta)</p>
-            <ul className="space-y-1 text-bone-400">{Object.entries(i.templates).map(([k, v]) => <li key={k}><code className="text-bone-200">{v}</code> · {k}</li>)}</ul>
+            <Status ok={!!i.push} label="Notifications push (téléphones)" help="Clés créées automatiquement au démarrage du serveur" />
           </div>
         </div>
       )}
